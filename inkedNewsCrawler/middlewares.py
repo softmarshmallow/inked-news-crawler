@@ -60,6 +60,9 @@ class InkednewscrawlerDownloaderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
+    DOWNLOADER_MIDDLEWARES = {
+        'scrapy_selenium.SeleniumMiddleware': 800
+    }
 
     @classmethod
     def from_crawler(cls, crawler):

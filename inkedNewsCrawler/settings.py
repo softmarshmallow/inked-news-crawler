@@ -14,6 +14,12 @@ BOT_NAME = 'inkedNewsCrawler'
 SPIDER_MODULES = ['inkedNewsCrawler.spiders']
 NEWSPIDER_MODULE = 'inkedNewsCrawler.spiders'
 
+# SCRAPY SELENIUM
+from shutil import which
+SELENIUM_DRIVER_NAME='chrome'
+SELENIUM_DRIVER_EXECUTABLE_PATH=which('chromedriver')
+SELENIUM_DRIVER_ARGUMENTS=['--headless']  # '--headless' if using chrome instead of firefox
+#
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'inkedNewsCrawler (+http://www.yourdomain.com)'
