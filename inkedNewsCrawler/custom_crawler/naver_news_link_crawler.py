@@ -1,8 +1,11 @@
 from datetime import datetime
 import json
+
+import sys
 from dateutil.rrule import DAILY, rrule
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+import atexit
 
 MAX_PAGES_PER_PAGINATION = 10
 
@@ -77,13 +80,22 @@ class NaverDateNewsLinkCrawler:
 
 def crawl_all_links():
     # start urls
-    start_date = datetime(2000, 1, 1)
-    end_date = datetime(2018, 7, 1)
+    start_date_str = input("start_date (YYYYmmdd) :: ")
+    end_date_str = input("end_date (YYYYmmdd) :: ")
+
+    start_date = datetime.strptime(start_date_str, '%Y%m%d')
+    end_date = datetime.strptime(end_date_str, '%Y%m%d')
 
     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
         NaverDateNewsLinkCrawler(dt).parse()
 
 
 if __name__ == "__main__":
+    def exit_handler():
+        from inkedNewsCrawler.utils.email_notification import send_email
+        send_email("Crawling Complete Please Check...")
+
+    atexit.register(exit_handler)
+
     crawl_all_links()
 
