@@ -40,7 +40,7 @@ class NaverDateNewsLinkCrawler:
             except:
                 break
 
-        self.driver.close()
+        self.driver.quit()
         self.save_to_file()
 
     def parse_available_pages(self):
