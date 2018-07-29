@@ -16,11 +16,15 @@ options.set_headless(True)
 
 class NaverDateNewsLinkCrawler:
     def __init__(self, date):
+        self.links = []
         self.date = date
         self.date_str = date.strftime("%Y%m%d")
         self.url = 'https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001&listType=title&date=%s' % self.date_str
-        self.driver = webdriver.Chrome(chrome_options=options)
-        self.links = []
+        try:
+            self.driver = webdriver.Chrome(chrome_options=options)
+        except:
+            pass
+
         print("Crawl", self.date_str)
 
     def parse(self):
@@ -73,7 +77,7 @@ class NaverDateNewsLinkCrawler:
 
 def crawl_all_links():
     # start urls
-    start_date = datetime(1990, 1, 1)
+    start_date = datetime(2000, 1, 1)
     end_date = datetime(2018, 7, 1)
 
     for dt in rrule(DAILY, dtstart=start_date, until=end_date):
