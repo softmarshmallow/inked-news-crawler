@@ -7,7 +7,6 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 import atexit
 
-from inkedNewsCrawler.utils.email_notification import send_email
 
 MAX_PAGES_PER_PAGINATION = 10
 
@@ -95,6 +94,7 @@ def crawl_all_links():
 
 if __name__ == "__main__":
     def exit_handler():
+        from inkedNewsCrawler.utils.email_notification import send_email
         send_email("Crawling Complete Please Check...")
 
 
