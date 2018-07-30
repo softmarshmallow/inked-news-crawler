@@ -11,10 +11,10 @@ import atexit
 MAX_PAGES_PER_PAGINATION = 10
 
 options = webdriver.ChromeOptions()
-# options.add_argument('--headless')
+options.add_argument('--headless')
 prefs = {"profile.managed_default_content_settings.images": 2}
 options.add_experimental_option("prefs", prefs)
-# options.set_headless(True)
+options.set_headless(True)
 
 
 class NaverDateNewsLinkCrawler:
