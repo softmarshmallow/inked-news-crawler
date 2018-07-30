@@ -5,8 +5,9 @@ import sys
 from dateutil.rrule import DAILY, rrule
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from inkedNewsCrawler.utils.email_notification import send_email
 import atexit
+
+from inkedNewsCrawler.utils.email_notification import send_email
 
 MAX_PAGES_PER_PAGINATION = 10
 
