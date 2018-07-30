@@ -11,10 +11,10 @@ import atexit
 MAX_PAGES_PER_PAGINATION = 10
 
 options = webdriver.ChromeOptions()
-options.add_argument('--headless')
+# options.add_argument('--headless')
 prefs = {"profile.managed_default_content_settings.images": 2}
 options.add_experimental_option("prefs", prefs)
-options.set_headless(True)
+# options.set_headless(True)
 
 
 class NaverDateNewsLinkCrawler:
@@ -25,7 +25,7 @@ class NaverDateNewsLinkCrawler:
         self.url = 'https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001&listType=title&date=%s' % self.date_str
         self.driver = driver
 
-        print("Crawl", self.date_str)
+        print("Crawl", self.date_str, "// AT:", datetime.now())
 
     def parse(self):
         self.driver.get(self.url)
