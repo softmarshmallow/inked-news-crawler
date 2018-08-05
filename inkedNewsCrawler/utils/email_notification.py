@@ -14,12 +14,16 @@ def send_email(title):
     msg['From'] = 'softmarshmallow.dummy@gmail.com'
     msg['To'] = 'woojoo@softmarshmallow.com'
     msg['Subject'] = title
+    try:
+        err = str(sys.last_value)
+    except AttributeError:
+        err = "No error"
     body = """
     process complete
     check info below. it may contain debug info.
     
     %s
-    """ % str(sys.last_value)
+    """ % err
     body = MIMEText(body)
     msg.attach(body)
 
