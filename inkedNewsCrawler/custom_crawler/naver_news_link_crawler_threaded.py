@@ -12,6 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 import atexit
 import time
 from multiprocessing.dummy import Pool as ThreadPool
+from inkedNewsCrawler.custom_crawler.naver_crawl_helper import check_if_links_empty, read_links_from_file, write_links_to_file
 
 dirname = os.path.dirname(__file__)
 
@@ -29,14 +30,14 @@ class NaverDateNewsLinkCrawler:
         self.links = []
         self.date = date
         self.date_str = date.strftime("%Y%m%d")
-        self.fileName = os.path.join(dirname, 'data/naver_date_article_links_%s.json' % self.date_str)
         self.url = 'https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001&listType=title&date=%s' % self.date_str
         self.driver = driver
 
         print("Crawl", self.date_str, "// AT:", datetime.now())
 
     def parse(self):
-        if self.check_if_already_parsed():
+        if not check_if_links_empty(date=self.date):
+            print("ALREADY CRAWLED:", self.date_str)
             return
         self.driver.get(self.url)
 
@@ -57,21 +58,8 @@ class NaverDateNewsLinkCrawler:
 
         self.save_to_file()
 
-    def check_if_already_parsed(self) -> bool:
-        if os.path.isfile(self.fileName):
-            with open(self.fileName) as f:
-                data = json.load(f)
-                if len(data) == 0:
-                    # is an empty file
-                    print("IS EMPTY", self.date_str)
-                    return False
-            print("IS ALREADY PARSED", self.date_str)
-            return True
-        return False
-
     def parse_available_pages(self):
         for i in range(0, MAX_PAGES_PER_PAGINATION):
-
 
             self.parse_article_in_page()
             # region click next available page in pager
@@ -96,15 +84,13 @@ class NaverDateNewsLinkCrawler:
             self.links.append(data)
 
     def save_to_file(self):
-        with open(self.fileName, 'w') as outfile:
-            json.dump(self.links, outfile)
+        write_links_to_file(date=self.date, links=self.links)
         print("Crawl Complete", self.date_str, " // AT:", datetime.now())
-
-
 
 
 available_drivers = []
 used_drivers = []
+
 
 def use_available_driver():
     while len(available_drivers) == 0:
@@ -113,6 +99,7 @@ def use_available_driver():
     available_drivers.remove(driver)
     used_drivers.append(driver)
     return driver
+
 
 def finish_using_driver(driver):
     used_drivers.remove(driver)
