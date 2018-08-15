@@ -133,9 +133,6 @@ def crawl_all_links():
     start_date = datetime.strptime(start_date_str, '%Y%m%d')
     end_date = datetime.strptime(end_date_str, '%Y%m%d')
     dates = rrule(DAILY, dtstart=start_date, until=end_date)
-    dates_count = len(dates)
-    splited_dates = np.array_split(dates, dates_count/THREAD_COUNT)
-
 
     # instantiate browsers
     for i in range(THREAD_COUNT):
@@ -144,22 +141,15 @@ def crawl_all_links():
         available_drivers.append(driver)
         # pass
 
-
-    # Crawl Per month for better Tracking...
-    for dates in splited_dates:
-        print("Month Crawl Start")
-        pool = ThreadPool(THREAD_COUNT)
-        pool.map(start_crawl, dates)
-        # close the pool and wait for the work to finish
-        pool.close()
-        pool.join()
+    pool = ThreadPool(THREAD_COUNT)
+    pool.map(start_crawl, dates)
+    # close the pool and wait for the work to finish
+    pool.close()
+    pool.join()
 
     #  Clean drivers
     for driver in available_drivers:
         driver.quit()
-
-
-
 
 
 if __name__ == "__main__":
