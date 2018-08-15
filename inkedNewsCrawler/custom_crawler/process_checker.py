@@ -3,8 +3,8 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY, DAILY
 
-from custom_crawler.naver_crawl_helper import check_if_links_empty
-from utils.date_input_manager import get_date_input
+from inkedNewsCrawler.custom_crawler.naver_crawl_helper import check_if_links_empty
+from inkedNewsCrawler.utils.date_input_manager import get_date_input
 
 
 def get_date_range(read_input=True, by_month = False):
