@@ -2,16 +2,27 @@ import json
 from datetime import datetime
 
 import os
+from typing import List
 from urllib.parse import urlparse, parse_qs
 import re
 
 from inkedNewsCrawler.settings import DATA_ROOT
 
 
+class NaverNewsLinkModel:
+    def __init__(self, aid, date, provider, full_content_link, print_link):
+        self.aid = aid
+        self.date = date
+        self.provider = provider
+        self.full_content_link = full_content_link
+        self.print_link = print_link
+
+
 def get_date_str(date: datetime):
     return date.strftime("%Y%m%d")
 
 
+# aid stands for <<Article ID>>
 def extract_aid(link:str)->str:
     query_string = urlparse(link).query
     aid = parse_qs(query_string)['aid'][0]
@@ -38,16 +49,19 @@ def write_links_to_file(date: datetime, links: [{str, str}]):
         json.dump(links, outfile)
 
 
-def read_links_from_file(date) -> []:
+def read_links_from_file(date) -> List[NaverNewsLinkModel]:
     links = []
     file_name = get_link_file_path(date)
     with open(file_name) as f:
         data = json.load(f)
         for record in data:
-            link = record["link"]
-            aid = extract_aid(link)
-            new_link = naver_article_url_builder(aid, "print")
-            links.append(new_link)
+            full_content_link = record["link"]
+            provider = record["provider"].encode("utf-8").decode("utf-8")
+            print(provider)
+            aid = extract_aid(full_content_link)
+            print_link = naver_article_url_builder(aid, "print")
+            link_data = NaverNewsLinkModel(aid=aid, date=date, provider=provider, full_content_link=full_content_link, print_link=print_link)
+            links.append(print_link)
     return links
 
 
@@ -55,7 +69,11 @@ def check_if_file_is_empty(file:str) -> bool:
     if os.path.isfile(file):
         # File exists
         with open(file) as f:
-            data = json.load(f)
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                print("FILE CONTAINS Invalid content", file)
+                return True
             if len(data) == 0:
                 # is an empty file
                 # print("File IS EMPTY", file)
@@ -99,7 +117,6 @@ def read_contents_from_file(date: datetime) -> []:
 def check_if_content_empty(date:datetime) -> bool:
     file_name = get_content_file_path(date)
     return check_if_file_is_empty(file_name)
-
 
 
 if __name__ == "__main__":
