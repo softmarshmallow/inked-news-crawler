@@ -5,7 +5,7 @@ import os
 from urllib.parse import urlparse, parse_qs
 import re
 
-from inkedNewsCrawler.settings import DATA_ROOT
+from ..settings import DATA_ROOT
 
 
 def get_date_str(date: datetime):
