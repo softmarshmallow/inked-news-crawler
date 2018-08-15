@@ -1,9 +1,12 @@
 from datetime import datetime
 import json
 
+import numpy as np
 import sys
 import os.path
-from dateutil.rrule import DAILY, rrule
+
+from dateutil.relativedelta import relativedelta
+from dateutil.rrule import DAILY, rrule, MONTHLY
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 import atexit
@@ -122,19 +125,16 @@ def start_crawl(dt):
     finish_using_driver(driver)
 
 
-
 def crawl_all_links():
     THREAD_COUNT = int(input("Thread counts:: "))
-
-
-    # start urls
     start_date_str = input("start_date (YYYYmmdd) :: ")
     end_date_str = input("end_date (YYYYmmdd) :: ")
 
     start_date = datetime.strptime(start_date_str, '%Y%m%d')
     end_date = datetime.strptime(end_date_str, '%Y%m%d')
-
     dates = rrule(DAILY, dtstart=start_date, until=end_date)
+    dates_count = len(dates)
+    splited_dates = np.array_split(dates, dates_count/THREAD_COUNT)
 
 
     # instantiate browsers
@@ -145,11 +145,14 @@ def crawl_all_links():
         # pass
 
 
-    pool = ThreadPool(THREAD_COUNT)
-    pool.map(start_crawl, dates)
-    # close the pool and wait for the work to finish
-    pool.close()
-    pool.join()
+    # Crawl Per month for better Tracking...
+    for dates in splited_dates:
+        print("Month Crawl Start")
+        pool = ThreadPool(THREAD_COUNT)
+        pool.map(start_crawl, dates)
+        # close the pool and wait for the work to finish
+        pool.close()
+        pool.join()
 
     #  Clean drivers
     for driver in available_drivers:

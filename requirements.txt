@@ -2,3 +2,5 @@ Scrapy
 python-dateutil
 selenium
 scrapy-selenium
+requests
+numpy

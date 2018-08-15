@@ -28,7 +28,7 @@ class MtNewslinkSpider(CrawlSpider):
         start_urls.append('http://news.mt.co.kr/newsTotalList.html?pDepth1=newsTotal&pDate=%s' % dt.strftime("%Y%m%d"))
 
     # rules = (
-    #     # Extract links for next pages
+    #     # Extract links for next pages9
     #     Rule(LinkExtractor(restrict_xpaths=("//*[@id=\"paging_t17\"]/span/a")), callback="parse_page_articles", follow=True),
     # )
 

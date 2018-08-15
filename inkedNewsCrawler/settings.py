@@ -8,6 +8,9 @@
 #     https://doc.scrapy.org/en/latest/topics/settings.html
 #     https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://doc.scrapy.org/en/latest/topics/spider-middleware.html
+import os
+
+import sys
 
 BOT_NAME = 'inkedNewsCrawler'
 
@@ -20,6 +23,12 @@ SELENIUM_DRIVER_NAME='chrome'
 SELENIUM_DRIVER_EXECUTABLE_PATH=which('chromedriver')
 SELENIUM_DRIVER_ARGUMENTS=['--headless']  # '--headless' if using chrome instead of firefox
 #
+
+# Custom settings
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
+DATA_ROOT = os.path.join(BASE_DIR, "data/")
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'inkedNewsCrawler (+http://www.yourdomain.com)'
