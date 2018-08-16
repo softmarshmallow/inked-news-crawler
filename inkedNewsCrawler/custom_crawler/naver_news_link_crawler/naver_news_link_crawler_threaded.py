@@ -1,18 +1,15 @@
 from datetime import datetime
-import json
 
-import numpy as np
-import sys
 import os.path
 
-from dateutil.relativedelta import relativedelta
-from dateutil.rrule import DAILY, rrule, MONTHLY
+from dateutil.rrule import DAILY, rrule
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 import atexit
 import time
 from multiprocessing.dummy import Pool as ThreadPool
-from inkedNewsCrawler.custom_crawler.naver_crawl_helper import check_if_links_empty, read_links_from_file, write_links_to_file
+from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawl_helper import check_if_links_empty, \
+    write_links_to_file
 
 dirname = os.path.dirname(__file__)
 

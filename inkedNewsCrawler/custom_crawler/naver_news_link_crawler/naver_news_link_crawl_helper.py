@@ -25,7 +25,11 @@ def get_date_str(date: datetime):
 # aid stands for <<Article ID>>
 def extract_aid(link:str)->str:
     query_string = urlparse(link).query
-    aid = parse_qs(query_string)['aid'][0]
+    try:
+        aid = parse_qs(query_string)['aid'][0]
+    except KeyError:
+        print("Key Error", link)
+        return None
     return aid
 
 
@@ -49,7 +53,7 @@ def write_links_to_file(date: datetime, links: [{str, str}]):
         json.dump(links, outfile)
 
 
-def read_links_from_file(date) -> List[NaverNewsLinkModel]:
+def read_links_from_file(date: datetime) -> List[NaverNewsLinkModel]:
     links = []
     file_name = get_link_file_path(date)
     with open(file_name) as f:
@@ -57,11 +61,10 @@ def read_links_from_file(date) -> List[NaverNewsLinkModel]:
         for record in data:
             full_content_link = record["link"]
             provider = record["provider"].encode("utf-8").decode("utf-8")
-            print(provider)
             aid = extract_aid(full_content_link)
             print_link = naver_article_url_builder(aid, "print")
             link_data = NaverNewsLinkModel(aid=aid, date=date, provider=provider, full_content_link=full_content_link, print_link=print_link)
-            links.append(print_link)
+            links.append(link_data)
     return links
 
 
@@ -90,7 +93,7 @@ def check_if_links_empty(date:datetime) -> bool:
     fileName = get_link_file_path(date)
     return check_if_file_is_empty(fileName)
 
-
+# region LEGACY
 def get_content_file_path(date: datetime) -> str:
     date_str = get_date_str(date)
     file_name = os.path.join(DATA_ROOT, 'naver_news_content_data/naver_date_article_contents_%s.json' % date_str)
@@ -117,6 +120,7 @@ def read_contents_from_file(date: datetime) -> []:
 def check_if_content_empty(date:datetime) -> bool:
     file_name = get_content_file_path(date)
     return check_if_file_is_empty(file_name)
+# endregion
 
 
 if __name__ == "__main__":

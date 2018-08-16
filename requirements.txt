@@ -4,3 +4,5 @@ selenium
 scrapy-selenium
 requests
 numpy
+pymongo
+scrapy-mongodb
