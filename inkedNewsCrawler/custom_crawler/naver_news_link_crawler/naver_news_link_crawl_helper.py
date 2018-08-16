@@ -75,12 +75,6 @@ def check_if_file_is_exists(file: str):
         return False
 
 
-        if mode == "light":
-            is_crawled = check_if_file_is_exists(day)
-        elif mode == "full":
-            is_crawled = not check_if_links_empty(day)
-
-
 # False = "file is crawled" // True = "file is empty"
 def check_if_file_is_empty(file: str, mode="full") -> bool:
     if check_if_file_is_exists(file):
