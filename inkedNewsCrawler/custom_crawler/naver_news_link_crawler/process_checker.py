@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY, DAILY
 
-from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawl_helper import check_if_links_empty
+from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawl_helper import check_if_links_empty, check_if_file_is_exists
 from inkedNewsCrawler.utils.date_input_manager import get_date_input
 
 
@@ -42,14 +42,15 @@ def get_date_range(read_input=True, by_month = False):
         dates = rrule(DAILY, dtstart=start_date, until=end_date)
         return [dates]
 
-def check_link_crawl_process():
+def check_link_crawl_process(mode="light"):
     month_dates_group = get_date_range(read_input=False, by_month=True)
     for month_dates in month_dates_group:
         completed_in_month = 0
         non_crawled_dates = []
         days_in_month = len(month_dates)
         for day in month_dates:
-            if not check_if_links_empty(day):
+
+            if not check_if_links_empty(day, mode=mode):
                 completed_in_month += 1
             else:
                 non_crawled_dates.append(day)

@@ -68,30 +68,47 @@ def read_links_from_file(date: datetime) -> List[NaverNewsLinkModel]:
     return links
 
 
-def check_if_file_is_empty(file:str) -> bool:
+def check_if_file_is_exists(file: str):
     if os.path.isfile(file):
-        # File exists
-        with open(file) as f:
-            try:
-                data = json.load(f)
-            except json.JSONDecodeError:
-                print("FILE CONTAINS Invalid content", file)
-                return True
-            if len(data) == 0:
-                # is an empty file
-                # print("File IS EMPTY", file)
-                return True
-        # file exists and full with content
-        # print("File IS READY with:", len(data), "records ",  file)
+        return True
+    else:
         return False
+
+
+        if mode == "light":
+            is_crawled = check_if_file_is_exists(day)
+        elif mode == "full":
+            is_crawled = not check_if_links_empty(day)
+
+
+# False = "file is crawled" // True = "file is empty"
+def check_if_file_is_empty(file: str, mode="full") -> bool:
+    if check_if_file_is_exists(file):
+        # File exists
+        if mode == "light":
+            return False
+        elif mode == "full":
+            with open(file) as f:
+                try:
+                    data = json.load(f)
+                except json.JSONDecodeError:
+                    print("FILE CONTAINS Invalid content", file)
+                    return True
+                if len(data) == 0:
+                    # is an empty file
+                    # print("File IS EMPTY", file)
+                    return True
+            # file exists and full with content
+            # print("File IS READY with:", len(data), "records ",  file)
+            return False
     else:
         # No file
         return True
 
 
-def check_if_links_empty(date:datetime) -> bool:
+def check_if_links_empty(date:datetime, mode="full") -> bool:
     fileName = get_link_file_path(date)
-    return check_if_file_is_empty(fileName)
+    return check_if_file_is_empty(fileName, mode=mode)
 
 # region LEGACY
 def get_content_file_path(date: datetime) -> str:
