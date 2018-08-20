@@ -75,10 +75,13 @@ class NaverDateNewsLinkCrawler:
             "//*[@id='main_content']/div[@class='list_body newsflash_body']//a[@class='nclicks(fls.list)']")
 
         for article in articles:
-            href = article.get_attribute('href')
-            provider = article.find_element_by_xpath("../span[@class='writing']").text
-            data = {"link": href, "provider": provider}
-            self.links.append(data)
+            try:
+                href = article.get_attribute('href')
+                provider = article.find_element_by_xpath("../span[@class='writing']").text
+                data = {"link": href, "provider": provider}
+                self.links.append(data)
+            except:
+                print("ERR", article)
 
     def save_to_file(self):
         write_links_to_file(date=self.date, links=self.links)
