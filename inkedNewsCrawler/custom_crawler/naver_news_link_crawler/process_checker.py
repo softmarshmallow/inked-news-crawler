@@ -56,7 +56,7 @@ def check_link_crawl_process(mode="light"):
                 non_crawled_dates.append(day)
 
         which_month = month_dates[0].strftime("%Y.%m")
-        print(which_month, completed_in_month, days_in_month, "Complete:", (completed_in_month==days_in_month), non_crawled_dates)
+        print(which_month, completed_in_month, days_in_month, "Complete:", (completed_in_month==days_in_month), non_crawled_dates[:5])
 
 
 if __name__ == "__main__":
