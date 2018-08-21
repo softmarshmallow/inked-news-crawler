@@ -67,7 +67,8 @@ class NaverDateNewsLinkCrawler:
     def parse_available_pages(self):
         for i in range(0, MAX_PAGES_PER_PAGINATION):
             self.page_count += 1
-            print(self.date_str, self.page_count, self.article_count)
+            if self.page_count % 100 == 0: print(self.date_str, self.page_count, self.article_count)
+
             self.parse_article_in_page()
             # region click next available page in pager
             try:
@@ -105,7 +106,7 @@ class NaverDateNewsLinkCrawler:
                 # provider = article.find_element_by_xpath("../span[@class='writing']").text
 
                 data = {"link": href, "provider": provider}
-                print(data)
+                # print(data)
                 self.links.append(data)
             except:
                 exceptions.append({"ERR": article})
