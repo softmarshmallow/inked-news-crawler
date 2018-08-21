@@ -60,4 +60,5 @@ def check_link_crawl_process(mode="light"):
 
 
 if __name__ == "__main__":
-    check_link_crawl_process()
+    mode = input("enter mode : ( light / full )")
+    check_link_crawl_process(mode=mode)
