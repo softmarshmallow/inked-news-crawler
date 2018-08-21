@@ -4,7 +4,7 @@ import sys
 from email.mime.text import MIMEText
 
 
-def send_email(title):
+def send_email(title, extra):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
     #Next, log in to the server
@@ -22,8 +22,9 @@ def send_email(title):
     process complete
     check info below. it may contain debug info.
     
-    %s
-    """ % err
+    Err: %s
+    Exceptions: %s
+    """ % (err, extra)
     body = MIMEText(body)
     msg.attach(body)
 

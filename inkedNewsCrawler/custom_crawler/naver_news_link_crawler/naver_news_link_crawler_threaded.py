@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 import os.path
@@ -21,6 +22,7 @@ prefs = {"profile.managed_default_content_settings.images": 2}
 options.add_experimental_option("prefs", prefs)
 options.set_headless(True)
 
+exceptions = []
 
 class NaverDateNewsLinkCrawler:
     def __init__(self, date, driver):
@@ -65,7 +67,11 @@ class NaverDateNewsLinkCrawler:
                     "//*[@id='main_content']/div[@class='paging']/a[@class='nclicks(fls.page)']")
                 page = pages[i]
                 # page.click()
-                self.driver.execute_script("arguments[0].click();", page)
+                try:
+                    self.driver.execute_script("arguments[0].click();", page)
+                except:
+                    exceptions.append({"ERR": page})
+                    print("ERR", page)
             except IndexError:
                 return
             # endregion
@@ -81,6 +87,7 @@ class NaverDateNewsLinkCrawler:
                 data = {"link": href, "provider": provider}
                 self.links.append(data)
             except:
+                exceptions.append({"ERR": article})
                 print("ERR", article)
 
     def save_to_file(self):
@@ -142,7 +149,7 @@ def crawl_all_links():
 if __name__ == "__main__":
     def exit_handler():
         from inkedNewsCrawler.utils.email_notification import send_email
-        send_email("Crawling Complete Please Check...")
+        send_email("Crawling Complete Please Check...", json.dumps(exceptions))
 
 
     atexit.register(exit_handler)
