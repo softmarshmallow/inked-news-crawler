@@ -166,7 +166,7 @@ def crawl_all_links(THREAD_COUNT, start_date, end_date):
 def main():
     def exit_handler():
         from inkedNewsCrawler.utils.email_notification import send_email
-        send_email("Crawling Complete Please Check...", json.dumps(exceptions))
+        send_email("Crawling Complete Please Check...")
 
     atexit.register(exit_handler)
 
