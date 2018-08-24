@@ -3,20 +3,30 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY, DAILY
 
-from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawl_helper import check_if_links_empty, check_if_file_is_exists
+from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawl_helper import check_if_links_empty, check_if_file_is_exists, get_articles_count_at_date
 from inkedNewsCrawler.utils.date_input_manager import get_date_input
 
+START_DATE = datetime(1990, 1, 1)
+END_DATE = datetime(2018, 8, 22)
 
-def get_date_range(read_input=True, by_month = False):
+
+def get_total_links_count():
+    total = 0
+    for date in rrule(DAILY, dtstart=START_DATE, until=END_DATE):
+        count = get_articles_count_at_date(date)
+        total += count
+        print(date, count, total)
+    return total
+
+
+def get_date_range(read_input=True, by_month=False):
     # start urls
-
     if read_input:
         start_date = get_date_input("start date")
         end_date = get_date_input("end date")
     else:
-        # For debug purpose
-        start_date = datetime(1990, 1, 1)
-        end_date = datetime(2020, 1, 1)
+        start_date = START_DATE
+        end_date = END_DATE
 
     if by_month:
         months_and_dates = [] # [[1, 2, 3, ... 31], [1, 2, 3, ... 30], [1, 2, 3,  ... 30]]
@@ -60,5 +70,8 @@ def check_link_crawl_process(mode="light"):
 
 
 if __name__ == "__main__":
+    if input("Read Total Links Count? (Y/N)") in ["y", "Y"]:
+        print("Total Links Count ::",  get_total_links_count())
+
     mode = input("enter mode : ( light / full )")
     check_link_crawl_process(mode=mode)

@@ -10,12 +10,14 @@ from inkedNewsCrawler.settings import DATA_ROOT
 
 
 class NaverNewsLinkModel:
-    def __init__(self, aid, date, provider, full_content_link, print_link):
+    def __init__(self, aid, date, provider, full_content_link):
         self.aid = aid
         self.date = date
         self.provider = provider
         self.full_content_link = full_content_link
-        self.print_link = print_link
+
+    def __str__(self):
+        return self.date.strftime("%Y.%m.%d") + "//" + self.aid + "//" + self.full_content_link
 
 
 def get_date_str(date: datetime):
@@ -60,10 +62,9 @@ def read_links_from_file(date: datetime) -> List[NaverNewsLinkModel]:
         data = json.load(f)
         for record in data:
             full_content_link = record["link"]
-            provider = record["provider"].encode("utf-8").decode("utf-8")
+            provider = record["provider"]
             aid = extract_aid(full_content_link)
-            print_link = naver_article_url_builder(aid, "print")
-            link_data = NaverNewsLinkModel(aid=aid, date=date, provider=provider, full_content_link=full_content_link, print_link=print_link)
+            link_data = NaverNewsLinkModel(aid=aid, date=date, provider=provider, full_content_link=full_content_link)
             links.append(link_data)
     return links
 
@@ -90,7 +91,7 @@ def check_if_file_is_empty(file: str, mode="full") -> bool:
                     return True
                 if len(data) == 0:
                     # is an empty file
-                    # print("File IS EMPTY", file)
+                    print("File IS EMPTY", file)
                     return True
             # file exists and full with content
             # print("File IS READY with:", len(data), "records ",  file)
@@ -98,6 +99,17 @@ def check_if_file_is_empty(file: str, mode="full") -> bool:
     else:
         # No file
         return True
+
+
+def get_articles_count_at_date(date: datetime):
+    file = get_link_file_path(date)
+    if check_if_file_is_exists(file):
+        with open(file) as f:
+            try:
+                return len(json.load(f))
+            except json.JSONDecodeError:
+                return 0
+    return 0
 
 
 def check_if_links_empty(date:datetime, mode="full") -> bool:

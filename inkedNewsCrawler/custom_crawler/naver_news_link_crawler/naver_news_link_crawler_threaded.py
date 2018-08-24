@@ -1,5 +1,7 @@
 import json
 from datetime import datetime
+from typing import Callable
+
 from lxml import html
 
 import os.path
@@ -18,31 +20,27 @@ dirname = os.path.dirname(__file__)
 
 MAX_PAGES_PER_PAGINATION = 10
 
-options = webdriver.ChromeOptions()
-options.set_headless(True)
-# options.add_argument('--headless')
-prefs = {"profile.managed_default_content_settings.images": 2,
-         "profile.managed_default_content_settings.javascript": 2}
 
-options.add_experimental_option("prefs", prefs)
 
 exceptions = []
 
 
 class NaverDateNewsLinkCrawler:
-    def __init__(self, date, driver):
+    def __init__(self, date, driver, callback: Callable, skip_crawled_date = True):
         self.links = []
         self.date = date
         self.date_str = date.strftime("%Y%m%d")
         self.url = 'https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001&listType=title&date=%s' % self.date_str
         self.driver = driver
+        self.callback = callback
+        self.skip_crawled_date = skip_crawled_date
         self.article_count = 0
         self.page_count = 0
 
         print("Crawl", self.date_str, "// AT:", datetime.now())
 
     def parse(self):
-        if not check_if_links_empty(date=self.date):
+        if self.skip_crawled_date and not check_if_links_empty(date=self.date):
             print("ALREADY CRAWLED:", self.date_str)
             return
         self.driver.get(self.url)
@@ -61,8 +59,10 @@ class NaverDateNewsLinkCrawler:
 
             except:
                 break
+        self.callback(self.date, self.links)
+        # self.save_to_file()
+        print("Crawl Complete", self.date_str, " // AT:", datetime.now())
 
-        self.save_to_file()
 
     def parse_available_pages(self):
         for i in range(0, MAX_PAGES_PER_PAGINATION):
@@ -79,9 +79,9 @@ class NaverDateNewsLinkCrawler:
                 try:
                     # page.click()
                     self.driver.execute_script("arguments[0].click();", page)
-                except:
-                    exceptions.append({"ERR": page})
-                    print("ERR", page)
+                except Exception as e:
+                    exceptions.append({"ERR_PAGE": self.page_count})
+                    print("ERR at page", self.page_count, e)
             except IndexError:
                 return
             # endregion
@@ -91,7 +91,7 @@ class NaverDateNewsLinkCrawler:
         html_source = self.driver.page_source
         tree = html.fromstring(html_source)
         articles = tree.xpath(
-            "//*[@id='main_content']/div[@class='list_body newsflash_body']//a[@class='nclicks(fls.list)']")
+            "//*[@id='main_content']/div[@class='list_body newsflash_body']//li")
 
         # articles = self.driver.find_elements_by_xpath(
         #     "//*[@id='main_content']/div[@class='list_body newsflash_body']//a[@class='nclicks(fls.list)']")
@@ -99,22 +99,27 @@ class NaverDateNewsLinkCrawler:
         for article in articles:
             self.article_count += 1
             try:
-                href = article.get("href")
-                provider = article.xpath("../span[@class='writing']/text()")
-                if len(provider) > 0: provider = provider[0]
-                # href = article.get_attribute('href')
-                # provider = article.find_element_by_xpath("../span[@class='writing']").text
+                href = article.xpath("./a/@href")[0]
+                title = article.xpath("./a/text()")[0].encode("utf-8").decode("utf-8")
+                publish_time = article.xpath("./span[@class='date']/text()")
+                if len(publish_time) > 0:
+                    publish_time = publish_time[0]
+                else:
+                    publish_time = article.xpath("./span[@class='date is_outdated']/text()")
+                    publish_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "/" + publish_time[0]
 
-                data = {"link": href, "provider": provider}
+                provider = article.xpath("./span[@class='writing']/text()")[0].encode("utf-8").decode("utf-8")
+
+                data = {"link": href, "title": title, "provider": provider, "time": publish_time}
+                print(data)
                 # print(data)
                 self.links.append(data)
-            except:
-                exceptions.append({"ERR": article})
-                print("ERR", article)
+            except Exception as e:
+                exceptions.append({"ERR_ARTICLE": self.article_count})
+                print("ERR at article", self.article_count, e)
 
-    def save_to_file(self):
-        write_links_to_file(date=self.date, links=self.links)
-        print("Crawl Complete", self.date_str, " // AT:", datetime.now())
+def save_to_file(date, links):
+    write_links_to_file(date=date, links=links)
 
 
 available_drivers = []
@@ -137,17 +142,21 @@ def finish_using_driver(driver):
 
 def start_crawl(dt):
     driver = use_available_driver()
-    NaverDateNewsLinkCrawler(dt, driver).parse()
+    NaverDateNewsLinkCrawler(dt, driver, save_to_file).parse()
     finish_using_driver(driver)
 
 
 def crawl_all_links(THREAD_COUNT, start_date, end_date):
     dates = rrule(DAILY, dtstart=start_date, until=end_date)
 
+    from inkedNewsCrawler.utils.web_drivers import get_chrome_options
+    chrome_options = get_chrome_options()
     # instantiate browsers
     for i in range(THREAD_COUNT):
         print("SETUP Driver %i" % (i + 1))
-        driver = webdriver.Chrome(chrome_options=options)
+        driver = webdriver.Chrome(chrome_options=chrome_options)
+        # driver = webdriver.PhantomJS()
+
 
         available_drivers.append(driver)
         # pass
