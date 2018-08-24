@@ -83,7 +83,7 @@ def check_if_file_is_empty(file: str, mode="full") -> bool:
         if mode == "light":
             return False
         elif mode == "full":
-            with open(file) as f:
+            with open(file, encoding="utf-8") as f:
                 try:
                     data = json.load(f)
                 except json.JSONDecodeError:
