@@ -20,13 +20,11 @@ dirname = os.path.dirname(__file__)
 
 MAX_PAGES_PER_PAGINATION = 10
 
-
-
 exceptions = []
 
 
 class NaverDateNewsLinkCrawler:
-    def __init__(self, date, driver, callback: Callable, skip_crawled_date = True):
+    def __init__(self, date, driver, callback: Callable, skip_crawled_date=True):
         self.links = []
         self.date = date
         self.date_str = date.strftime("%Y%m%d")
@@ -63,7 +61,6 @@ class NaverDateNewsLinkCrawler:
         # self.save_to_file()
         print("Crawl Complete", self.date_str, " // AT:", datetime.now())
 
-
     def parse_available_pages(self):
         for i in range(0, MAX_PAGES_PER_PAGINATION):
             self.page_count += 1
@@ -80,8 +77,9 @@ class NaverDateNewsLinkCrawler:
                     # page.click()
                     self.driver.execute_script("arguments[0].click();", page)
                 except Exception as e:
-                    exceptions.append({"ERR_PAGE": self.page_count})
-                    print("ERR at page", self.page_count, e)
+                    error_data = {"Error": e, "ErrPage": self.page_count, "Date": self.date_str}
+                    exceptions.append(error_data)
+                    print(error_data)
             except IndexError:
                 return
             # endregion
@@ -100,22 +98,39 @@ class NaverDateNewsLinkCrawler:
             self.article_count += 1
             try:
                 href = article.xpath("./a/@href")[0]
-                title = article.xpath("./a/text()")[0]
+                # region title
+                title = article.xpath("./a/text()")
+                if len(title) > 0:
+                    title = title[0]
+                else:
+                    title = ""
+                # endregion
+
+                # region publish_time
                 publish_time = article.xpath("./span[@class='date']/text()")
                 if len(publish_time) > 0:
                     publish_time = publish_time[0]
                 else:
                     publish_time = article.xpath("./span[@class='date is_outdated']/text()")
                     publish_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "/" + publish_time[0]
+                # endregion
 
-                provider = article.xpath("./span[@class='writing']/text()")[0]
+                # region provider
+                provider = article.xpath("./span[@class='writing']/text()")
+                if len(provider) >0:
+                    provider = provider[0]
+                else:
+                    provider = ""
+                # endregion
 
                 data = {"link": href, "title": title, "provider": provider, "time": publish_time}
-                # print(data)
                 self.links.append(data)
+
             except Exception as e:
-                exceptions.append({"ERR_ARTICLE": self.article_count})
-                print("ERR at article", self.article_count, e)
+                error_data = {"Error": e, "Article": self.article_count, "Date": self.date_str, "Page": self.page_count}
+                exceptions.append(error_data)
+                print(error_data)
+
 
 def save_to_file(date, links):
     write_links_to_file(date=date, links=links)
@@ -156,7 +171,6 @@ def crawl_all_links(THREAD_COUNT, start_date, end_date):
         driver = webdriver.Chrome(chrome_options=chrome_options)
         # driver = webdriver.PhantomJS()
 
-
         available_drivers.append(driver)
         # pass
 
@@ -174,7 +188,8 @@ def crawl_all_links(THREAD_COUNT, start_date, end_date):
 def main():
     def exit_handler():
         from inkedNewsCrawler.utils.email_notification import send_email
-        send_email("Crawling Complete Please Check...")
+        exception_str = json.dumps(exceptions)
+        send_email("Crawling Complete Please Check...", extra=exception_str)
 
     atexit.register(exit_handler)
 
