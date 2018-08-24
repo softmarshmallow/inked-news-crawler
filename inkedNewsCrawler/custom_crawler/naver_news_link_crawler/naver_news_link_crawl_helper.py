@@ -51,8 +51,8 @@ def get_link_file_path(date: datetime) -> str:
 
 def write_links_to_file(date: datetime, links: [{str, str}]):
     file_name = get_link_file_path(date)
-    with open(file_name, 'w') as outfile:
-        json.dump(links, outfile)
+    with open(file_name, 'w', encoding='utf-8') as outfile:
+        json.dump(links, outfile, ensure_ascii=False)
 
 
 def read_links_from_file(date: datetime) -> List[NaverNewsLinkModel]:

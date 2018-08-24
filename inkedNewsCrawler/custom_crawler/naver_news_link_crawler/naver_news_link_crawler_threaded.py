@@ -100,7 +100,7 @@ class NaverDateNewsLinkCrawler:
             self.article_count += 1
             try:
                 href = article.xpath("./a/@href")[0]
-                title = article.xpath("./a/text()")[0].encode("utf-8").decode("utf-8")
+                title = article.xpath("./a/text()")[0]
                 publish_time = article.xpath("./span[@class='date']/text()")
                 if len(publish_time) > 0:
                     publish_time = publish_time[0]
@@ -108,10 +108,9 @@ class NaverDateNewsLinkCrawler:
                     publish_time = article.xpath("./span[@class='date is_outdated']/text()")
                     publish_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "/" + publish_time[0]
 
-                provider = article.xpath("./span[@class='writing']/text()")[0].encode("utf-8").decode("utf-8")
+                provider = article.xpath("./span[@class='writing']/text()")[0]
 
                 data = {"link": href, "title": title, "provider": provider, "time": publish_time}
-                print(data)
                 # print(data)
                 self.links.append(data)
             except Exception as e:

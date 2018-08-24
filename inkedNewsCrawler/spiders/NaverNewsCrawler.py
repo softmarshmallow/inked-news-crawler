@@ -90,8 +90,8 @@ class NavernewscrawlerSpider(scrapy.Spider):
             item = NaverNewsContentItem()
             item["article_id"] = link_data.aid
             item["article_url"] = response.request.url
-            item["title"] = data[0].encode("utf-8").decode("utf-8")
-            item["body_html"] = data[1].encode("utf-8").decode("utf-8")
+            item["title"] = data[0]
+            item["body_html"] = data[1]
             item["time"] = data[2].strftime("%Y-%m-%d %H:%M:%S")
             item["provider"] = link_data.provider
             yield item
