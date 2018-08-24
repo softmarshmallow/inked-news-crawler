@@ -77,7 +77,7 @@ class NaverDateNewsLinkCrawler:
                     # page.click()
                     self.driver.execute_script("arguments[0].click();", page)
                 except Exception as e:
-                    error_data = {"Error": e, "ErrPage": self.page_count, "Date": self.date_str}
+                    error_data = {"Error": str(e), "ErrPage": self.page_count, "Date": self.date_str}
                     exceptions.append(error_data)
                     print(error_data)
             except IndexError:
@@ -127,7 +127,7 @@ class NaverDateNewsLinkCrawler:
                 self.links.append(data)
 
             except Exception as e:
-                error_data = {"Error": e, "Article": self.article_count, "Date": self.date_str, "Page": self.page_count}
+                error_data = {"Error": str(e), "Article": self.article_count, "Date": self.date_str, "Page": self.page_count}
                 exceptions.append(error_data)
                 print(error_data)
 
