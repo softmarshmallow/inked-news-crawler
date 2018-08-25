@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawler_threaded import NaverDateNewsLinkCrawler
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_link_crawler_threaded import NaverDateNewsLinkCrawler
 from selenium import webdriver
 
 def callback(date, result):

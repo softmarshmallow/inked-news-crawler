@@ -3,7 +3,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY, DAILY
 
-from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawl_helper import check_if_links_empty, check_if_file_is_exists, get_articles_count_at_date
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import check_if_links_empty, check_if_file_is_exists, get_articles_count_at_date
 from inkedNewsCrawler.utils.date_input_manager import get_date_input
 
 START_DATE = datetime(1990, 1, 1)

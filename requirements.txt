@@ -76,3 +76,5 @@ dateparser==0.7.0
 arrow==0.12.1
 html2text==2018.1.9
 beautifulsoup4==4.6.3
+boto3==1.8.1
+parsel==1.5.0

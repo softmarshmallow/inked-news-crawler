@@ -21,3 +21,5 @@ class NaverNewsContentItem(scrapy.Item):
     body_html = scrapy.Field()
     provider = scrapy.Field()
     article_url = scrapy.Field()
+    redirect_url = scrapy.Field()
+    origin_url = scrapy.Field()

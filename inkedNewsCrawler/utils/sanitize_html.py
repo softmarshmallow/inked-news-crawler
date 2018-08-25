@@ -11,7 +11,6 @@ def remove_unused_tags_html(html):
             # blacklisted tags are removed in their entirety
             tag.extract()
 
-
     comments = soup.findAll(text=lambda text:isinstance(text, Comment))
     for comment in comments:
         comment.extract()

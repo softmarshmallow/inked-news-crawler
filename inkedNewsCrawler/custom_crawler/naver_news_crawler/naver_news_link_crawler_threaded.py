@@ -12,9 +12,9 @@ from selenium.common.exceptions import NoSuchElementException
 import atexit
 import time
 from multiprocessing.dummy import Pool as ThreadPool
-from inkedNewsCrawler.custom_crawler.naver_news_link_crawler.naver_news_link_crawl_helper import \
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
     check_if_links_empty, \
-    write_links_to_file
+    IOManager
 
 dirname = os.path.dirname(__file__)
 
@@ -132,8 +132,9 @@ class NaverDateNewsLinkCrawler:
                 print(error_data)
 
 
-def save_to_file(date, links):
-    write_links_to_file(date=date, links=links)
+def save_to_file(date, links, from_s3=False):
+    iom = IOManager(from_s3=from_s3)
+    iom.write_links_to_file(date=date, links=links)
 
 
 available_drivers = []
