@@ -95,9 +95,13 @@ class IOManager:
         links = []
         file_name = get_link_file_path(date, from_s3=self.from_s3)
         if self.from_s3:
-            obj = s3.Object(bucket_name, file_name)
-            data = obj.get()["Body"].read()
-            data = json.loads(data)
+            try:
+                obj = s3.Object(bucket_name, file_name)
+                data = obj.get()["Body"].read()
+                data = json.loads(data)
+            except ClientError as e:
+                print("Client Error", e, file_name)
+                return []
         else:
             with open(file_name) as f:
                 data = json.load(f)
