@@ -12,8 +12,8 @@ from botocore.exceptions import ClientError
 from inkedNewsCrawler.settings import DATA_ROOT
 
 
-aws_access_key_id = 'AKIAIT3MNYK5KO6SZKAQ'
-aws_secret_access_key = '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'
+aws_access_key_id = 'AKIAI7EV4RFHWPEBWLAA'
+aws_secret_access_key = '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'
 s3 = boto3.resource('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
 bucket_name = 'naver-news-crawling-resources'
 

@@ -82,8 +82,9 @@ class NaverArticleContentParser:
             item["time"] = self.link_data.time
             item["provider"] = self.link_data.provider
             return item
-        except AttributeError as e:
-            print("AttributeError ERR", self.link_data, e)
+        except Exception as e:
+            print("ERR", self.link_data, e)
+
 
     @DeprecationWarning
     def parse_from_print_content_url(self, response):
