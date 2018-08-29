@@ -6,22 +6,32 @@ import requests
 from dateutil.rrule import rrule, DAILY
 from parsel import Selector
 
-from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import detect_url_type, IOManager
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
+    detect_url_type, IOManager, check_if_file_is_empty, get_content_file_path
 from inkedNewsCrawler.utils.sanitize_html import remove_unused_tags_html
 import arrow
 
 exceptions = []
 
 
+
 class NaverNewsContentCrawler:
     def __init__(self, date, callback, check_if_crawled=True, from_s3=True):
         self.date = date
+        self.from_s3 = from_s3
         self.callback = callback
         self.check_if_crawled = check_if_crawled
         self.content_data_list = []
         self.iom = IOManager(from_s3=from_s3)
 
     def main(self):
+        if self.check_if_crawled:
+            file_path = get_content_file_path(date=self.date, from_s3=self.from_s3)
+            empty = check_if_file_is_empty(file_path, from_s3=self.from_s3)
+            if not empty:
+                print("Already Parsed", file_path)
+                return
+
         link_data_list = self.iom.read_links_from_file(self.date)
         total_links_count = len(link_data_list)
         print("START Content Crawling", self.date, total_links_count)
@@ -33,7 +43,7 @@ class NaverNewsContentCrawler:
                 print(self.date, i, "of", total_links_count, datetime.now())
 
         self.callback(self.date, self.content_data_list)
-        return self.content_data_list
+        return
 
     def parse_single_article(self, link_data):
 
@@ -48,7 +58,6 @@ def translate_time(time_str:str):
     time_str = time_str.replace("오전", "AM")
     time_str = time_str.replace("오후", "PM")
     return time_str
-
 
 
 class NaverArticleContentParser:
@@ -83,6 +92,8 @@ class NaverArticleContentParser:
             return item
         except Exception as e:
             # print("ERR", self.link_data, e)
+            # skipped_urls.append(self.link_data)
+            # TODO add skipped support
             ...
 
     @DeprecationWarning
@@ -143,7 +154,7 @@ def save_to_file(date, contents, from_s3=True):
 
 
 def start_crawl(date):
-    NaverNewsContentCrawler(date=date, callback=save_to_file).main()
+    NaverNewsContentCrawler(date=date, check_if_crawled=True, callback=save_to_file, from_s3=True).main()
 
 
 def crawl_all_content(THREAD_COUNT, start_date, end_date):

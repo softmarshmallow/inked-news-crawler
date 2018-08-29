@@ -161,7 +161,7 @@ def check_if_file_is_exists(file: str, from_s3=False):
 # False = "file is crawled" // True = "file is empty"
 def check_if_file_is_empty(file: str, mode="full", from_s3=False) -> bool:
     if from_s3:
-        raise NotImplementedError
+        return not check_if_file_is_exists(file=file, from_s3=True)
     else:
         if check_if_file_is_exists(file):
             # File exists
