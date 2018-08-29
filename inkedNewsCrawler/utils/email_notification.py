@@ -8,7 +8,7 @@ def send_email(title, extra=""):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
     #Next, log in to the server
-    server.login("softmarshmallow.dummy@gmail.com", "SHARED@password")
+    server.login("softmarshmallow.dummy@gmail.com", "DUMMY@password")
 
     msg = MIMEMultipart()
     msg['From'] = 'softmarshmallow.dummy@gmail.com'

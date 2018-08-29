@@ -10,10 +10,12 @@ import boto3.s3
 from botocore.exceptions import ClientError
 
 from inkedNewsCrawler.settings import DATA_ROOT
+from inkedNewsCrawler.utils.aws_credentials_reader import read_credentials
 
 
-aws_access_key_id = 'AKIAI7EV4RFHWPEBWLAA'
-aws_secret_access_key = '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'
+cred = read_credentials()
+aws_access_key_id = cred[0]
+aws_secret_access_key = cred[1]
 s3 = boto3.resource('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
 bucket_name = 'naver-news-crawling-resources'
 
@@ -28,8 +30,7 @@ class NaverNewsLinkModel:
         self.full_content_link = full_content_link
 
     def __str__(self):
-        return self.date.strftime("%Y.%m.%d") + "//" + self.aid + "//" + self.full_content_link
-
+        return self.date.strftime("%Y.%m.%d") + "//" + self.aid + "//" + self.full_content_link + "//" + self.title
 
 
 def detect_url_type(url):

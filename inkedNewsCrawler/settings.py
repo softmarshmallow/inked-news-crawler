@@ -61,9 +61,19 @@ ROBOTSTXT_OBEY = False
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'inkedNewsCrawler.middlewares.InkednewscrawlerSpiderMiddleware': 543,
-#}
+SPIDER_MIDDLEWARES = {
+    'scrapy_proxies.RandomProxy': 100,
+    'inkedNewsCrawler.middlewares.InkednewscrawlerSpiderMiddleware': 543,
+}
+
+# region scrapy_proxies
+# Retry many times since proxies often fail
+RETRY_TIMES = 10
+# Retry on most error codes since proxies fail for different reasons
+RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
+
+PROXY_LIST = "../proxies.txt"
+# endregion
 
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
