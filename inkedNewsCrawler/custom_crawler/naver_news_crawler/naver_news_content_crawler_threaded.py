@@ -30,7 +30,7 @@ class NaverNewsContentCrawler:
             i += 1
             self.parse_single_article(link_data)
             if i % 100 == 0:
-                print(self.date, i, datetime.now())
+                print(self.date, i, "of", total_links_count, datetime.now())
 
         self.callback(self.date, self.content_data_list)
         return self.content_data_list
@@ -82,8 +82,8 @@ class NaverArticleContentParser:
             item["provider"] = self.link_data.provider
             return item
         except Exception as e:
-            print("ERR", self.link_data, e)
-
+            # print("ERR", self.link_data, e)
+            ...
 
     @DeprecationWarning
     def parse_from_print_content_url(self, response):
