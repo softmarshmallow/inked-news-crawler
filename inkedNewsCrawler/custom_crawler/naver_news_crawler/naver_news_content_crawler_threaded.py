@@ -9,7 +9,6 @@ from parsel import Selector
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import detect_url_type, IOManager
 from inkedNewsCrawler.utils.sanitize_html import remove_unused_tags_html
 import arrow
-from inkedNewsCrawler.items import NaverNewsContentItem
 
 exceptions = []
 
