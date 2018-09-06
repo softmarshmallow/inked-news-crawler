@@ -15,7 +15,7 @@ def get_random_proxy_for_requests():
 
     proxy = random.choice(proxies_list)
     proxies = {
-        'http': proxy,
+        # 'http': proxy,
         'https': proxy,
     }
     return proxies

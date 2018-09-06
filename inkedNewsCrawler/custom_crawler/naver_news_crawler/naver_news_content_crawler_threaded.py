@@ -88,7 +88,7 @@ class NaverNewsContentCrawler:
 
     def log_progress(self, data=None):
         self.crawled_count += 1
-        if self.crawled_count % 10 == 0:
+        if self.crawled_count % 100 == 0:
             print(self.date, self.crawled_count, "of", self.total_links_count, datetime.now())
 
     def crawl_single_article(self, link_data, callback=None):
@@ -207,16 +207,16 @@ def start_crawl(date, threads_count):
                             from_s3=True, threads_count=threads_count).main()
 
 
-def crawl_all_content_NOTHREAD(start_date, end_date, threads_count):
+def crawl_all_content_NOTHREAD(start_date, end_date, threads_count_per_date):
     dates = rrule(DAILY, dtstart=start_date, until=end_date)
     for date in dates:
-        start_crawl(date, threads_count)
+        start_crawl(date, threads_count_per_date)
 
 
-def crawl_all_content(THREAD_COUNT, start_date, end_date):
+def crawl_all_content(THREAD_COUNT, start_date, end_date, threads_count_per_date):
     dates = rrule(DAILY, dtstart=start_date, until=end_date)
     pool = ThreadPool(THREAD_COUNT)
-    pool.map(start_crawl, dates)
+    pool.starmap(start_crawl, zip(dates, repeat(threads_count_per_date)))
     # close the pool and wait for the work to finish
     pool.close()
     pool.join()
@@ -227,12 +227,13 @@ def crawl_all_content_with_thread(use_thread=True):
     end_date_str = input("end_date (YYYYmmdd) :: ")
     start_date = datetime.strptime(start_date_str, '%Y%m%d')
     end_date = datetime.strptime(end_date_str, '%Y%m%d')
+    thread_count_per_date = int(input("Thread counts per dates:: "))
     if use_thread:
-        THREAD_COUNT = int(input("Thread counts:: "))
-        crawl_all_content(THREAD_COUNT=THREAD_COUNT, start_date=start_date, end_date=end_date)
+        thread_count_per_total_process = int(input("Thread counts per total process:: "))
+        crawl_all_content(THREAD_COUNT=thread_count_per_total_process, start_date=start_date, end_date=end_date, threads_count_per_date=thread_count_per_date)
     else:
-        thread_count_per_date = int(input("Thread counts per dates:: "))
-        crawl_all_content_NOTHREAD(start_date=start_date, end_date=end_date, threads_count=thread_count_per_date)
+        crawl_all_content_NOTHREAD(start_date=start_date, end_date=end_date, threads_count_per_date=thread_count_per_date)
+
 
 def crawl_all_content_with_thread_by_date():
     target_date_str = input("target date (YYYYmmdd) :: ")
@@ -251,4 +252,4 @@ if __name__ == "__main__":
 
     atexit.register(exit_handler)
     # crawl_all_content_with_thread()
-    crawl_all_content_with_thread(use_thread=False)
+    crawl_all_content_with_thread(use_thread=True)
