@@ -2,14 +2,16 @@ import json
 
 import boto3
 
+from inkedNewsCrawler.utils.aws_credentials_reader import read_credentials
+
 LAMBDA_ENTPOINT_URI = ""
 REGION = "ap-northeast-2"
 
 import boto3
 
 
-ACCESS_ID = "AKIAINK2RVOMOGKLYT7A"
-ACCESS_KEY = "CFpVDhMXD+UP3zbwPTWyCvHHXD/Viu6Xr+oA2laC"
+ACCESS_ID = read_credentials('lambda_access')[0]
+ACCESS_KEY = read_credentials('lambda_access')[1]
 client = boto3.client('lambda', region_name='ap-northeast-2', aws_access_key_id=ACCESS_ID,
                       aws_secret_access_key= ACCESS_KEY)
 

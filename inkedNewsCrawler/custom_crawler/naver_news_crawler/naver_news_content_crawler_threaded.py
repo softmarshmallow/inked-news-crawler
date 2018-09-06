@@ -28,8 +28,13 @@ class NaverNewsSingleArticleContentCrawler:
         return data
 
     def parse_single_article(self):
-        # proxies = get_random_proxy_for_requests()
-        r = requests.get(url=self.link_data.full_content_link)#, proxies=proxies)
+        try:
+            r = requests.get(url=self.link_data.full_content_link)#, proxies=proxies)
+        except requests.exceptions.ConnectionError:
+            proxies = get_random_proxy_for_requests()
+            print("Access Denied try with proxy connection", proxies)
+            r = requests.get(url=self.link_data.full_content_link, proxies=proxies)
+
         selector = Selector(text=r.text)
         content_data = NaverArticleContentParser(link_data=self.link_data, redirect_url=r.url,
                                                  selector=selector).parse()
@@ -83,7 +88,7 @@ class NaverNewsContentCrawler:
 
     def log_progress(self, data=None):
         self.crawled_count += 1
-        if self.crawled_count % 100 == 0:
+        if self.crawled_count % 10 == 0:
             print(self.date, self.crawled_count, "of", self.total_links_count, datetime.now())
 
     def crawl_single_article(self, link_data, callback=None):
