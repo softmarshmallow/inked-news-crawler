@@ -159,7 +159,7 @@ def check_if_file_is_exists(file: str, from_s3=False):
 
 
 # False = "file is crawled" // True = "file is empty"
-def check_if_file_is_empty(file: str, mode="full", from_s3=False) -> bool:
+def check_if_file_is_empty(file: str, mode="light", from_s3=False) -> bool:
     if from_s3:
         return not check_if_file_is_exists(file=file, from_s3=True)
     else:
@@ -197,9 +197,9 @@ def get_articles_count_at_date(date: datetime, from_s3):
     return 0
 
 
-def check_if_links_empty(date:datetime, mode="full") -> bool:
-    fileName = get_link_file_path(date)
-    return check_if_file_is_empty(fileName, mode=mode)
+def check_if_links_empty(date:datetime, mode="full", from_s3=False) -> bool:
+    fileName = get_link_file_path(date, from_s3=from_s3)
+    return check_if_file_is_empty(fileName, mode=mode, from_s3=from_s3)
 
 
 def get_content_file_path(date: datetime, from_s3) -> str:
@@ -212,9 +212,9 @@ def get_content_file_path(date: datetime, from_s3) -> str:
         return file_name
 
 
-def check_if_content_empty(date:datetime) -> bool:
-    file_name = get_content_file_path(date)
-    return check_if_file_is_empty(file_name)
+def check_if_content_empty(date:datetime, from_s3=False) -> bool:
+    file_name = get_content_file_path(date, from_s3=from_s3)
+    return check_if_file_is_empty(file_name, from_s3=from_s3)
 # endregion
 
 
