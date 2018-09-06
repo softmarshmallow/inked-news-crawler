@@ -42,6 +42,7 @@ class NaverNewsSingleArticleContentCrawler:
         # print(content_data)
 
 
+
 class NaverNewsContentCrawler:
     def __init__(self, date, callback, check_if_crawled=True, from_s3=True,
                  thread_for_each_request=True, threads_count=1024):
@@ -88,7 +89,7 @@ class NaverNewsContentCrawler:
 
     def log_progress(self, data=None):
         self.crawled_count += 1
-        if self.crawled_count % 100 == 0:
+        if self.crawled_count % 10 == 0:
             print(self.date, self.crawled_count, "of", self.total_links_count, datetime.now())
 
     def crawl_single_article(self, link_data, callback=None):
