@@ -9,6 +9,7 @@ from itertools import repeat
 
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
     detect_url_type, IOManager, check_if_file_is_empty, get_content_file_path
+from inkedNewsCrawler.utils.random_proxy import get_random_proxy_for_requests
 from inkedNewsCrawler.utils.sanitize_html import remove_unused_tags_html
 import arrow
 
@@ -27,7 +28,8 @@ class NaverNewsSingleArticleContentCrawler:
         return data
 
     def parse_single_article(self):
-        r = requests.get(url=self.link_data.full_content_link)
+        proxies = get_random_proxy_for_requests()
+        r = requests.get(url=self.link_data.full_content_link, proxies=proxies)
         selector = Selector(text=r.text)
         content_data = NaverArticleContentParser(link_data=self.link_data, redirect_url=r.url,
                                                  selector=selector).parse()
