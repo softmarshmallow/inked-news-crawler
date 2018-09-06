@@ -28,8 +28,8 @@ class NaverNewsSingleArticleContentCrawler:
         return data
 
     def parse_single_article(self):
-        proxies = get_random_proxy_for_requests()
-        r = requests.get(url=self.link_data.full_content_link, proxies=proxies)
+        # proxies = get_random_proxy_for_requests()
+        r = requests.get(url=self.link_data.full_content_link)#, proxies=proxies)
         selector = Selector(text=r.text)
         content_data = NaverArticleContentParser(link_data=self.link_data, redirect_url=r.url,
                                                  selector=selector).parse()
