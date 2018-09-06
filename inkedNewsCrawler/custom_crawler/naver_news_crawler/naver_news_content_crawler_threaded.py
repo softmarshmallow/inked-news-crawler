@@ -89,7 +89,7 @@ class NaverNewsContentCrawler:
 
     def log_progress(self, data=None):
         self.crawled_count += 1
-        if self.crawled_count % 10 == 0:
+        if self.crawled_count % 100 == 0:
             print(self.date, self.crawled_count, "of", self.total_links_count, datetime.now())
 
     def crawl_single_article(self, link_data, callback=None):
@@ -253,4 +253,4 @@ if __name__ == "__main__":
 
     atexit.register(exit_handler)
     # crawl_all_content_with_thread()
-    crawl_all_content_with_thread(use_thread=True)
+    crawl_all_content_with_thread(use_thread=False)
