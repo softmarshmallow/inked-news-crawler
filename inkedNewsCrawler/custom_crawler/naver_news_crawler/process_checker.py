@@ -7,8 +7,8 @@ from dateutil.rrule import rrule, MONTHLY, DAILY
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import check_if_links_empty, check_if_file_is_exists, get_articles_count_at_date, get_content_file_path, check_if_content_empty
 from inkedNewsCrawler.utils.date_input_manager import get_date_input
 
-START_DATE = datetime(2004, 1, 1)
-END_DATE = datetime(2018, 8, 22)
+START_DATE = datetime(2013, 10, 1)
+END_DATE = datetime(2018, 8, 1)
 
 
 def get_total_links_count():
