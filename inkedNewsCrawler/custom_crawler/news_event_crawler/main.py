@@ -79,14 +79,11 @@ def parse_month(year, month) -> List[StockCalendarEventModel]:
         pool.close()
         pool.join()
         index += 1
-        # FIXME For debug
-        if index == 2:
-            print("BREAK")
-            break
-        #
-        # for item in event_items:
-        #     data = parse_single_event(item, datetime(year, month, day))
-        #     eventDataList.append(data)
+
+        # # FIXME For debug
+        # if index == 2:
+        #     print("BREAK")
+        #     break
 
     return eventDataList
 
