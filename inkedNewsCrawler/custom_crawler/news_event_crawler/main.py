@@ -26,8 +26,13 @@ def build_url(year, month):
 
 def main():
     all_data_list = get_all_events()
+    total = len(all_data_list)
+    index = 0
     for event_data in all_data_list:
+        print("Current: ", index, "  Total: ", total)
         register_calendar_event_to_server(event_data, isTest=False)
+        time.sleep(0.1)
+        index += 1
     # 1. Get all calendar events
     # 2. Loop each events, send to server
 
