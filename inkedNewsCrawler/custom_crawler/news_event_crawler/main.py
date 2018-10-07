@@ -24,8 +24,8 @@ def build_url(year, month):
     return url
 
 
-def main():
-    all_data_list = get_all_events()
+def main(start_date, end_date):
+    all_data_list = get_all_events(start_date, end_date)
     total = len(all_data_list)
     index = 0
     for event_data in all_data_list:
@@ -37,12 +37,10 @@ def main():
     # 2. Loop each events, send to server
 
 
-def get_all_events() -> List[StockCalendarEventModel]:
+def get_all_events(start_date, end_date) -> List[StockCalendarEventModel]:
     all_event_data_list = []
 
-    start_date = datetime(2017, 8, 1)
-    # end_date = datetime(2020, 1, 1)
-    end_date = datetime(2019, 1, 1)
+
     months = rrule(MONTHLY, dtstart=start_date, until=end_date)
     for month in months:
         print(month)
@@ -75,8 +73,8 @@ def parse_month(year, month) -> List[StockCalendarEventModel]:
         date_events_root = tree.xpath(xpath)[0]
 
         event_items = date_events_root.xpath("//div[@class='drag']")
-
-        pool = ThreadPool(len(event_items))
+        thread_count = len(event_items) if len(event_items) > 0 else 1
+        pool = ThreadPool(thread_count)
         result = pool.starmap(parse_single_event,
                               zip(event_items, repeat(datetime(year, month, day))))
         eventDataList.extend(result)
@@ -117,18 +115,34 @@ def parse_single_event(event_item_node: html.HtmlElement, datetime):
 
 def parse_blog_content(blog_url) -> str:
     # EX. http://everystocks.com/index.php?mid=calendar&pYear=2017&pMonth=8&document_srl=731
-
+    content = ""
     r = request_with_retries(blog_url)
     tree = html.fromstring(r.text)
 
     # remove unused element
-    remove_target = tree.xpath('//div[@class="document_popup_menu"]')[0]
-    remove_target.getparent().remove(remove_target)
+    try:
+        remove_target = tree.xpath('//div[@class="document_popup_menu"]')[0]
+        remove_target.getparent().remove(remove_target)
+    except IndexError:
+        print("NO POPUP MENU, SKIP")
+        ...
+    try:
+        p = tree.xpath('//*[@id="content"]/div/div[3]/div/div[2]/div')[0]
+        content = str(p.text_content())
+    except IndexError:
+        print("NO CONTENT", blog_url)
 
-    p = tree.xpath('//*[@id="content"]/div/div[3]/div/div[2]/div')[0]
-    content = str(p.text_content())
     return content
 
 
 if __name__ == '__main__':
-    main()
+    # start_date = datetime(2017, 8, 1)
+    # # end_date = datetime(2020, 1, 1)
+    # end_date = datetime(2019, 1, 1)
+    print("AVAILABLE DATE RANGE: 2017.8.1 ~ 2020")
+    start_date_str = input("start_date (YYYYmm) :: ")
+    end_date_str = input("end_date (YYYYmm) :: ")
+
+    start_date = datetime.strptime(start_date_str, '%Y%m')
+    end_date = datetime.strptime(end_date_str, '%Y%m')
+    main(start_date, end_date)
