@@ -1,4 +1,6 @@
 import calendar
+from multiprocessing.pool import ThreadPool
+from itertools import repeat
 from typing import List
 
 import requests
@@ -15,18 +17,17 @@ from inkedNewsCrawler.custom_crawler.news_event_crawler.event_register_service i
 
 BASE_URL = "http://everystocks.com/"
 
+
 def build_url(year, month):
     url = BASE_URL + "index.php?mid=calendar&pYear=%s&pMonth=%s" % (
         str(year), str(month))
     return url
 
 
-
-
 def main():
     all_data_list = get_all_events()
     for event_data in all_data_list:
-        register_calendar_event_to_server(event_data)
+        register_calendar_event_to_server(event_data, isTest=False)
     # 1. Get all calendar events
     # 2. Loop each events, send to server
 
@@ -36,7 +37,7 @@ def get_all_events() -> List[StockCalendarEventModel]:
 
     start_date = datetime(2017, 8, 1)
     # end_date = datetime(2020, 1, 1)
-    end_date = datetime(2018, 1, 1)
+    end_date = datetime(2019, 1, 1)
     months = rrule(MONTHLY, dtstart=start_date, until=end_date)
     for month in months:
         print(month)
@@ -44,7 +45,6 @@ def get_all_events() -> List[StockCalendarEventModel]:
         all_event_data_list.extend(month_events)
 
     return all_event_data_list
-
 
 
 def request_with_retries(url):
@@ -55,6 +55,7 @@ def request_with_retries(url):
         time.sleep(0.5)
         return request_with_retries(url)
 
+
 def parse_month(year, month) -> List[StockCalendarEventModel]:
     eventDataList = []
     url = build_url(year, month)
@@ -62,30 +63,54 @@ def parse_month(year, month) -> List[StockCalendarEventModel]:
     tree = html.fromstring(r.text)
 
     month_range = calendar.monthrange(year, month)
-    for day in range(1, month_range[1] + 1):
-
+    index = 0
+    day_count_in_month = month_range[1]
+    for day in range(1, day_count_in_month + 1):
         xpath = "//div[@id='day_schedule_container_{}-{}-{}']".format(year, month, day)
         date_events_root = tree.xpath(xpath)[0]
 
         event_items = date_events_root.xpath("//div[@class='drag']")
-        for item in event_items:
-            blog_url = item.xpath('./a/@href')[0]
-            blog_url = urljoin(BASE_URL, blog_url)
-            content = parse_blog_content(blog_url)
-            print("blog_url", blog_url)
-            print("content", content)
-            print("\n")
-            # region Create model
-            data = StockCalendarEventModel()
-            data.eventName = item.text_content()
-            data.eventContent = content
-            data.eventTime = datetime(year, month, day)
-            data.links = [blog_url]
-            data.extraFields = {"source": "everystocks.com", "version": "0.0.1", "production": True}
-            # endregion
-            eventDataList.append(data)
+
+        pool = ThreadPool(len(event_items))
+        result = pool.starmap(parse_single_event,
+                              zip(event_items, repeat(datetime(year, month, day))))
+        eventDataList.extend(result)
+        # close the pool and wait for the work to finish
+        pool.close()
+        pool.join()
+        index += 1
+        # FIXME For debug
+        if index == 2:
+            print("BREAK")
+            break
+        #
+        # for item in event_items:
+        #     data = parse_single_event(item, datetime(year, month, day))
+        #     eventDataList.append(data)
 
     return eventDataList
+
+
+def parse_single_event(event_item_node: html.HtmlElement, datetime):
+    blog_url = event_item_node.xpath('./a/@href')[0]
+    blog_url = urljoin(BASE_URL, blog_url)
+    event_name = event_item_node.text_content()
+    content = parse_blog_content(blog_url)
+    event_date = datetime
+    print("event_name", event_name)
+    print("blog_url", blog_url)
+    print("event_date", event_date)
+    # print("content", content)
+    print("\n")
+    # region Create model
+    data = StockCalendarEventModel()
+    data.eventName = event_name
+    data.eventContent = content
+    data.eventTime = event_date
+    data.links = [blog_url]
+    data.extraFields = {"source": "everystocks.com", "version": "0.0.1", "production": True}
+    # endregion
+    return data
 
 
 def parse_blog_content(blog_url) -> str:
@@ -99,7 +124,7 @@ def parse_blog_content(blog_url) -> str:
     remove_target.getparent().remove(remove_target)
 
     p = tree.xpath('//*[@id="content"]/div/div[3]/div/div[2]/div')[0]
-    content = p.text_content()
+    content = str(p.text_content())
     return content
 
 
