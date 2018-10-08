@@ -69,6 +69,8 @@ def parse_month(year, month) -> List[StockCalendarEventModel]:
     index = 0
     day_count_in_month = month_range[1]
     for day in range(1, day_count_in_month + 1):
+        # FIXME Issue, 첫번째 달은 문제없음, 두번째 달의 펑션 콜일경우 하단에 IndexError 발생함..  클래스 모듈화를 한다면 없엘수 있을수도.
+        # 어떤 변수가 공유되면서 발생하는 문제인것같음. 또는 쓰래드 공유시 발생한느 문제로 짐작중..
         xpath = "//div[@id='day_schedule_container_{}-{}-{}']".format(year, month, day)
         date_events_root = tree.xpath(xpath)[0]
 
