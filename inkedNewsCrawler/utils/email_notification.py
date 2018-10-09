@@ -4,15 +4,18 @@ import sys
 from email.mime.text import MIMEText
 
 
+developer = 'woojoo@softmarshmallow.com'
+
+
 def send_email(title, extra=""):
     server = smtplib.SMTP('smtp.gmail.com', 587)
     server.starttls()
     #Next, log in to the server
-    server.login("softmarshmallow.dummy@gmail.com", "DUMMY@password")
+    server.login("softmarshmallow.dummy@gmail.com", "SHARED@passwordgg")
 
     msg = MIMEMultipart()
-    msg['From'] = 'softmarshmallow.dummy@gmail.com'
-    msg['To'] = 'woojoo@softmarshmallow.com'
+    msg['From'] = 'inked crawler'
+    msg['To'] = developer
     msg['Subject'] = title
     try:
         err = str(sys.last_value)
