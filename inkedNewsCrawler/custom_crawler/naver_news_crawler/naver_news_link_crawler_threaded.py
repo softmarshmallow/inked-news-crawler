@@ -132,7 +132,7 @@ class NaverDateNewsLinkCrawler:
                 print(error_data)
 
 
-def save_to_file(date, links, from_s3=False):
+def save_to_file(date, links, from_s3=True):
     iom = IOManager(from_s3=from_s3)
     iom.write_links_to_file(date=date, links=links)
 
