@@ -12,7 +12,6 @@ BASE_SERVER_URL = "http://nginx-lb-429321543.ap-northeast-2.elb.amazonaws.com/"
 request_url = BASE_SERVER_URL + "api/stock_events/"
 
 
-
 def register_calendar_event_to_server(stockCalendarEventData: StockCalendarEventModel, isTest=True):
     payload = \
         {
@@ -33,12 +32,11 @@ def register_calendar_event_to_server(stockCalendarEventData: StockCalendarEvent
 
 
 if __name__ == '__main__':
-
     test_data = StockCalendarEventModel()
     test_data.eventTime = datetime(2018, 12, 25)
     test_data.eventName = "크리스마스"
     test_data.eventContent = "행복한 크리스마스 입니당~"
-    test_data.links = ["http://christmas.com/",]
+    test_data.links = ["http://christmas.com/", ]
     test_data.extraFields = {"isTest": True}
 
     register_calendar_event_to_server(test_data)

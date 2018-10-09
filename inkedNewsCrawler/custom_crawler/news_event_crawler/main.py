@@ -1,8 +1,9 @@
 import calendar
+import json
 from multiprocessing.pool import ThreadPool
 from itertools import repeat
-from typing import List
-
+from typing import List, Callable
+import atexit
 import requests
 from lxml import html
 from lxml.etree import tostring
@@ -25,29 +26,33 @@ def build_url(year, month):
 
 
 def main(start_date, end_date):
-    all_data_list = get_all_events(start_date, end_date)
-    total = len(all_data_list)
+    def exit_handler():
+        from inkedNewsCrawler.utils.email_notification import send_email
+        # exception_str = json.dumps(exceptions)
+        send_email("Event Crawling Complete Please Check...", extra="")
+
+    atexit.register(exit_handler)
+    # Add process listener
+
+
+    # 1. Get all calendar events
+    # 2. Loop each events, send to server
+    months = rrule(MONTHLY, dtstart=start_date, until=end_date)
+    for month in months:
+        print(month)
+        MonthEventsCrawler(year=month.year, month=month.month, callback=onCrawlComplete).crawl()
+
+
+
+
+def onCrawlComplete(data_list):
+    total = len(data_list)
     index = 0
-    for event_data in all_data_list:
+    for event_data in data_list:
         print("Current: ", index, "  Total: ", total)
         register_calendar_event_to_server(event_data, isTest=False)
         time.sleep(0.1)
         index += 1
-    # 1. Get all calendar events
-    # 2. Loop each events, send to server
-
-
-def get_all_events(start_date, end_date) -> List[StockCalendarEventModel]:
-    all_event_data_list = []
-
-
-    months = rrule(MONTHLY, dtstart=start_date, until=end_date)
-    for month in months:
-        print(month)
-        month_events = parse_month(month.year, month.month)
-        all_event_data_list.extend(month_events)
-
-    return all_event_data_list
 
 
 def request_with_retries(url):
@@ -59,38 +64,50 @@ def request_with_retries(url):
         return request_with_retries(url)
 
 
-def parse_month(year, month) -> List[StockCalendarEventModel]:
-    eventDataList = []
-    url = build_url(year, month)
-    r = request_with_retries(url)
-    tree = html.fromstring(r.text)
+class MonthEventsCrawler:
+    def __init__(self, year, month, callback: Callable):
+        self.year = year
+        self.month = month
+        self.url = build_url(year, month)
+        self.eventDataList = []
+        self.callback = callback
 
-    month_range = calendar.monthrange(year, month)
-    index = 0
-    day_count_in_month = month_range[1]
-    for day in range(1, day_count_in_month + 1):
-        # FIXME Issue, 첫번째 달은 문제없음, 두번째 달의 펑션 콜일경우 하단에 IndexError 발생함..  클래스 모듈화를 한다면 없엘수 있을수도.
-        # 어떤 변수가 공유되면서 발생하는 문제인것같음. 또는 쓰래드 공유시 발생한느 문제로 짐작중..
-        xpath = "//div[@id='day_schedule_container_{}-{}-{}']".format(year, month, day)
-        date_events_root = tree.xpath(xpath)[0]
+    def crawl(self):
+        self.parse_month_events()
+        self.callback(self.eventDataList)
 
-        event_items = date_events_root.xpath("//div[@class='drag']")
-        thread_count = len(event_items) if len(event_items) > 0 else 1
-        pool = ThreadPool(thread_count)
-        result = pool.starmap(parse_single_event,
-                              zip(event_items, repeat(datetime(year, month, day))))
-        eventDataList.extend(result)
-        # close the pool and wait for the work to finish
-        pool.close()
-        pool.join()
-        index += 1
+    def parse_month_events(self):
 
-        # # FIXME For debug
-        # if index == 2:
-        #     print("BREAK")
-        #     break
+        r = request_with_retries(self.url)
+        tree = html.fromstring(r.text)
 
-    return eventDataList
+        month_range = calendar.monthrange(self.year, self.month)
+        index = 0
+        day_count_in_month = month_range[1]
+        for day in range(1, day_count_in_month + 1):
+            # FIXME Issue, 첫번째 달은 문제없음, 두번째 달의 펑션 콜일경우 하단에 IndexError 발생함..  클래스 모듈화를 한다면 없엘수 있을수도.
+            # 어떤 변수가 공유되면서 발생하는 문제인것같음. 또는 쓰래드 공유시 발생한느 문제로 짐작중..
+            xpath = "//div[@id='day_schedule_container_{}-{}-{}']".format(self.year, self.month, day)
+            try:
+                date_events_root = tree.xpath(xpath)[0]
+
+                event_items = date_events_root.xpath("//div[@class='drag']")
+                thread_count = len(event_items) if len(event_items) > 0 else 1
+                pool = ThreadPool(thread_count)
+                result = pool.starmap(parse_single_event,
+                                      zip(event_items, repeat(datetime(self.year, self.month, day))))
+                self.eventDataList.extend(result)
+                # close the pool and wait for the work to finish
+                pool.close()
+                pool.join()
+                index += 1
+            except IndexError as e:
+                print(tostring(tree))
+                print(e)
+
+
+
+
 
 
 def parse_single_event(event_item_node: html.HtmlElement, datetime):
@@ -141,7 +158,7 @@ if __name__ == '__main__':
     # start_date = datetime(2017, 8, 1)
     # # end_date = datetime(2020, 1, 1)
     # end_date = datetime(2019, 1, 1)
-    print("AVAILABLE DATE RANGE: 2017.8.1 ~ 2020")
+    print("AVAILABLE DATE RANGE: 2017.8. ~ 2019.2")
     start_date_str = input("start_date (YYYYmm) :: ")
     end_date_str = input("end_date (YYYYmm) :: ")
 
