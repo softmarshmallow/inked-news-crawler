@@ -1,21 +1,15 @@
 import json
+import os.path
 from datetime import datetime
+from multiprocessing.dummy import Pool as ThreadPool
 from typing import Callable
 
-from lxml import html
-
-import os.path
-
-from dateutil.rrule import DAILY, rrule
-from prompt_toolkit.contrib.telnet.protocol import EC
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
 import atexit
 import time
-from multiprocessing.dummy import Pool as ThreadPool
-
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
+from dateutil.rrule import DAILY, rrule
+from lxml import html
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
 
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
     check_if_links_empty, \
