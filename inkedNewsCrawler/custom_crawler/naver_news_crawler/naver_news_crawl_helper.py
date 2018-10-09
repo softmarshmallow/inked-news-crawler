@@ -86,12 +86,14 @@ class IOManager:
     def write_links_to_file(self, date: datetime, links: [{str, str}]):
         file_name = get_link_file_path(date, from_s3=self.from_s3)
         if self.from_s3:
-            raise NotImplementedError
+            if self.from_s3:
+                object = s3.Object(bucket_name, file_name)
+                data = json.dumps(links, ensure_ascii=False)
+                object.put(Body=data)
         else:
             with open(file_name, 'w', encoding='utf-8') as outfile:
                 json.dump(links, outfile, ensure_ascii=False)
 
-    # TODO Add S3 Support
     def read_links_from_file(self, date: datetime) -> List[NaverNewsLinkModel]:
         links = []
         file_name = get_link_file_path(date, from_s3=self.from_s3)
@@ -130,14 +132,22 @@ class IOManager:
         contents = []
         file_name = get_content_file_path(date, from_s3=self.from_s3)
         if self.from_s3:
-            raise NotImplementedError
+            try:
+                obj = s3.Object(bucket_name, file_name)
+                data = obj.get()["Body"].read()
+                data = json.loads(data)
+            except ClientError as e:
+                print("Client Error", e, file_name)
+                return []
+
         else:
             with open(file_name) as f:
                 data = json.load(f)
-                for record in data:
-                    # Record to instance
-                    contents.append(record)
-            return contents
+
+        for record in data:
+            # Record to instance
+            contents.append(record)
+        return contents
 
 
 def check_if_file_is_exists(file: str, from_s3=False):

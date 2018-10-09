@@ -1,23 +1,33 @@
 from datetime import datetime
 
-from dateutil.rrule import rrule, DAILY
+from selenium.webdriver import Chrome
 
-from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import read_links_from_file
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_link_crawler_threaded import \
+    NaverDateNewsLinkCrawler
 
-
-providers = []
-
-i = 0
-for date in rrule(DAILY, dtstart=datetime(1990, 1, 1), until=datetime(2018, 8, 1)):
-    links = read_links_from_file(date)
-    for link_data in links:
-        print(link_data.aid, link_data.time, link_data.title, link_data.provider)
-        i += 1
-        if link_data.provider not in providers:
-            providers.append(link_data.provider)
-
-        if i % 1000 == 0:
-            print(providers)
+from inkedNewsCrawler.utils.web_drivers import get_chrome_options
+chrome_options = get_chrome_options()
+driver = Chrome(chrome_options=chrome_options)
 
 
-print(providers)
+
+def callback(a):
+    ...
+
+
+maxPerPage = 50
+
+def main():
+    crawler = NaverDateNewsLinkCrawler(date=datetime(2018, 1, 1), driver=driver, callback=callback, skip_crawled_date=False)
+    crawler.load_page()
+
+    for i in range(20):
+        crawler.parse_article_in_page()
+        crawler.move_to_next_page()
+        max = maxPerPage*(i+1)
+        print(crawler.link_data_list[max - 50:max])
+
+
+
+if __name__ == "__main__":
+    main()

@@ -14,7 +14,7 @@ END_DATE = datetime(2018, 8, 1)
 def get_total_links_count():
     total = 0
     for date in rrule(DAILY, dtstart=START_DATE, until=END_DATE):
-        count = get_articles_count_at_date(date)
+        count = get_articles_count_at_date(date, from_s3=False)
         total += count
         print(date, count, total)
     return total
@@ -91,6 +91,7 @@ def check_crawl_process(mode="light", type="link", from_s3=False):
 
         which_month = month_dates[0].strftime("%Y.%m")
         print(type, which_month, completed_in_month, days_in_month, "Complete:", (completed_in_month==days_in_month), non_crawled_dates[:5])
+
 
 if __name__ == "__main__":
     if input("Read Total Links Count? (Y/N)") in ["y", "Y"]:
