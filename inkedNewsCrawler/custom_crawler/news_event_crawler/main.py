@@ -72,18 +72,23 @@ def parse_month(year, month) -> List[StockCalendarEventModel]:
         # FIXME Issue, 첫번째 달은 문제없음, 두번째 달의 펑션 콜일경우 하단에 IndexError 발생함..  클래스 모듈화를 한다면 없엘수 있을수도.
         # 어떤 변수가 공유되면서 발생하는 문제인것같음. 또는 쓰래드 공유시 발생한느 문제로 짐작중..
         xpath = "//div[@id='day_schedule_container_{}-{}-{}']".format(year, month, day)
-        date_events_root = tree.xpath(xpath)[0]
+        try:
+            date_events_root = tree.xpath(xpath)[0]
 
-        event_items = date_events_root.xpath("//div[@class='drag']")
-        thread_count = len(event_items) if len(event_items) > 0 else 1
-        pool = ThreadPool(thread_count)
-        result = pool.starmap(parse_single_event,
-                              zip(event_items, repeat(datetime(year, month, day))))
-        eventDataList.extend(result)
-        # close the pool and wait for the work to finish
-        pool.close()
-        pool.join()
-        index += 1
+            event_items = date_events_root.xpath("//div[@class='drag']")
+            thread_count = len(event_items) if len(event_items) > 0 else 1
+            pool = ThreadPool(thread_count)
+            result = pool.starmap(parse_single_event,
+                                  zip(event_items, repeat(datetime(year, month, day))))
+            eventDataList.extend(result)
+            # close the pool and wait for the work to finish
+            pool.close()
+            pool.join()
+            index += 1
+        except IndexError as e:
+            print(tostring(tree))
+            print(e)
+            ...
 
         # # FIXME For debug
         # if index == 2:
@@ -141,7 +146,7 @@ if __name__ == '__main__':
     # start_date = datetime(2017, 8, 1)
     # # end_date = datetime(2020, 1, 1)
     # end_date = datetime(2019, 1, 1)
-    print("AVAILABLE DATE RANGE: 2017.8.1 ~ 2020")
+    print("AVAILABLE DATE RANGE: 2017.8. ~ 2019.2")
     start_date_str = input("start_date (YYYYmm) :: ")
     end_date_str = input("end_date (YYYYmm) :: ")
 
