@@ -10,7 +10,7 @@ http://everystocks.com 의 주식 달력 서비스를 크롤링 해옵니다.
 
 
 
-#Crawling Policy
+# Crawling Policy
 
 크롤링 주기: 6시간 마다 1회.
 크롤링 가능 구간: 2017.8 ~
@@ -19,7 +19,7 @@ http://everystocks.com 의 주식 달력 서비스를 크롤링 해옵니다.
 
 
 
-##uid
+## uid
 
 everstocks 의 DB 와 솔루션의 DB를 싱크 해야합니다.
 
