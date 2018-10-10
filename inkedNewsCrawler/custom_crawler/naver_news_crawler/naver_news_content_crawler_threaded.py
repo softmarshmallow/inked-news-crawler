@@ -21,7 +21,7 @@ class NaverNewsSingleArticleContentCrawler:
         self.link_data = link_data
         self.callback = callback
 
-    def main(self):
+    def parse_single_article_with_callback(self):
         data = self.parse_single_article()
         if self.callback is not None:
             self.callback(data)
@@ -29,11 +29,11 @@ class NaverNewsSingleArticleContentCrawler:
 
     def parse_single_article(self):
         try:
-            r = requests.get(url=self.link_data.full_content_link)#, proxies=proxies)
+            r = requests.get(url=self.link_data.article_url)#, proxies=proxies)
         except requests.exceptions.ConnectionError:
             proxies = get_random_proxy_for_requests()
             print("Access Denied try with proxy connection", proxies)
-            r = requests.get(url=self.link_data.full_content_link, proxies=proxies)
+            r = requests.get(url=self.link_data.article_url, proxies=proxies)
 
         selector = Selector(text=r.text)
         content_data = NaverArticleContentParser(link_data=self.link_data, redirect_url=r.url,
@@ -93,7 +93,7 @@ class NaverNewsContentCrawler:
             print(self.date, self.crawled_count, "of", self.total_links_count, datetime.now())
 
     def crawl_single_article(self, link_data, callback=None):
-        content_data = NaverNewsSingleArticleContentCrawler(link_data, callback=callback).main()
+        content_data = NaverNewsSingleArticleContentCrawler(link_data, callback=callback).parse_single_article_with_callback()
         self.content_data_list.append(content_data)
 
 
@@ -126,19 +126,21 @@ class NaverArticleContentParser:
                 raise Exception
 
             # item = NaverNewsContentItem()
+            # TODO Move this to class object
             item = {}
             item["article_id"] = self.link_data.aid
-            item["article_url"] = self.link_data.full_content_link
+            item["article_url"] = self.link_data.article_url
             item["redirect_url"] = self.redirect_url
             item["origin_url"] = data[3]
             item["title"] = data[0]
             item["body_html"] = data[1]
             # item["time"] = data[2].strftime("%Y-%m-%d %H:%M:%S")
-            item["time"] = self.link_data.time
+            item["time"] = self.link_data.publish_time
             item["provider"] = self.link_data.provider
+
             return item
         except Exception as e:
-            # print("ERR", self.link_data, e)
+            print("ERR", self.link_data, e)
             # skipped_urls.append(self.link_data)
             # TODO add skipped support
             ...

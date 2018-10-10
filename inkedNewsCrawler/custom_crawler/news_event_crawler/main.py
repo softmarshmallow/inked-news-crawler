@@ -13,7 +13,7 @@ from urllib.parse import urljoin
 from dateutil.rrule import rrule, DAILY, MONTHLY
 
 from inkedNewsCrawler.custom_crawler.news_event_crawler.event_model import StockCalendarEventModel
-from inkedNewsCrawler.custom_crawler.news_event_crawler.event_register_service import \
+from inkedNewsCrawler.services.vps_stock_calendar_event_service import \
     register_calendar_event_to_server
 
 BASE_URL = "http://everystocks.com/"

@@ -21,16 +21,19 @@ bucket_name = 'naver-news-crawling-resources'
 
 
 class NaverNewsLinkModel:
-    def __init__(self, aid, date, time, title, provider, full_content_link):
-        self.aid = aid
-        self.date = date
-        self.time = time
+    def __init__(self, publish_time, title, provider, article_url):
+        self.aid = extract_aid(article_url)
         self.title = title
+        self.publish_time = publish_time
         self.provider = provider
-        self.full_content_link = full_content_link
+        self.article_url = article_url
 
     def __str__(self):
-        return self.date.strftime("%Y.%m.%d") + "//" + self.aid + "//" + self.full_content_link + "//" + self.title
+        return self.publish_time + " :: " + self.aid + " :: " + self.article_url + " :: " + self.title
+
+    def to_dictionary(self):
+        data = {"link": self.article_url, "title": self.title, "provider": self.provider, "time": self.publish_time}
+        return data
 
 
 def detect_url_type(url):
@@ -83,12 +86,13 @@ class IOManager:
         self.from_s3 = from_s3
 
     # TODO Add S3 Support
-    def write_links_to_file(self, date: datetime, links: [{str, str}]):
+    def write_links_to_file(self, date: datetime, links: List[NaverNewsLinkModel]):
         file_name = get_link_file_path(date, from_s3=self.from_s3)
         if self.from_s3:
             if self.from_s3:
                 object = s3.Object(bucket_name, file_name)
-                data = json.dumps(links, ensure_ascii=False)
+                dict_list = [x.to_dictionary() for x in links]
+                data = json.dumps(dict_list, ensure_ascii=False)
                 object.put(Body=data)
         else:
             with open(file_name, 'w', encoding='utf-8') as outfile:
@@ -113,8 +117,7 @@ class IOManager:
             provider = record["provider"]
             time = record["time"]
             title = record["title"]
-            aid = extract_aid(full_content_link)
-            link_data = NaverNewsLinkModel(aid=aid, date=date, time=time, title=title, provider=provider, full_content_link=full_content_link)
+            link_data = NaverNewsLinkModel(publish_time=time, title=title, provider=provider, article_url=full_content_link)
             links.append(link_data)
         return links
 

@@ -2,7 +2,7 @@ import json
 import os.path
 from datetime import datetime, timedelta
 from multiprocessing.dummy import Pool as ThreadPool
-from typing import Callable
+from typing import Callable, List
 
 import atexit
 import re
@@ -14,20 +14,19 @@ from selenium.common.exceptions import NoSuchElementException
 
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
     check_if_links_empty, \
-    IOManager
+    IOManager, NaverNewsLinkModel
 
 dirname = os.path.dirname(__file__)
-
 
 # news.naver.com pagination count
 MAX_PAGES_PER_PAGINATION = 10
 
 exceptions = []
 
-
 FROM_S3 = True
 SKIP_CRAWLED = True
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
 
 class NaverDateNewsLinkCrawler:
     """
@@ -39,8 +38,10 @@ class NaverDateNewsLinkCrawler:
 - 다음 버튼으로 다음 페지네이션으로 이동가능함.
 
     """
-    def __init__(self, date, driver, on_page_crawled: Callable, on_items_complete: Callable, skip_crawled_date=True):
-        self.link_data_list = []
+
+    def __init__(self, date, driver, on_page_crawled: Callable, on_items_complete: Callable,
+                 skip_crawled_date=True):
+        self.link_data_list: List[NaverNewsLinkModel] = []
         self.date = date
         self.date_str = date.strftime("%Y%m%d")
         self.url = 'https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001&listType=title&date=%s' % self.date_str
@@ -104,7 +105,8 @@ class NaverDateNewsLinkCrawler:
             "//*[@id='main_content']/div[@class='paging']/a[@class='nclicks(fls.page)']")
 
     def move_to_next_page(self) -> bool:
-        if self.current_page_number % 100 == 0: print(self.date_str, self.current_page_number, self.article_count)
+        if self.current_page_number % 100 == 0: print(self.date_str, self.current_page_number,
+                                                      self.article_count)
 
         # region click next available page in pager
         try:
@@ -117,7 +119,8 @@ class NaverDateNewsLinkCrawler:
                 self.current_page_number += 1
 
             except Exception as e:
-                error_data = {"Error": str(e), "ErrPage": self.current_page_number, "Date": self.date_str}
+                error_data = {"Error": str(e), "ErrPage": self.current_page_number,
+                              "Date": self.date_str}
                 exceptions.append(error_data)
                 print(error_data)
                 return False
@@ -126,13 +129,15 @@ class NaverDateNewsLinkCrawler:
             if not moved_to_next_pagination:
                 return False
             return True
-                # raise Exception("next page is not available")
+            # raise Exception("next page is not available")
         # endregion
         return True
 
     def parse_article_in_page(self):
         html_source = self.driver.page_source
-        page_link_data_list = NewsLinkPageArticleParser(page_html=html_source, page_date=self.date_str, page_number=self.current_page_number).parse()
+        page_link_data_list = NewsLinkPageArticleParser(page_html=html_source,
+                                                        page_date=self.date_str,
+                                                        page_number=self.current_page_number).parse()
 
         # single item added Callback
         if self.on_page_crawled is not None:
@@ -151,14 +156,15 @@ class NewsLinkPageArticleParser:
 
     :return list of news_link_data
     '''
+
     def __init__(self, page_html, page_number, page_date):
         self.page_html = page_html
         self.page_date = page_date
         self.page_number = page_number
         self.current_article_number_in_page = 0
-        self.link_data_list = []
+        self.link_data_list: List[NaverNewsLinkModel] = []
 
-    def parse(self):
+    def parse(self) -> List[NaverNewsLinkModel]:
         tree = html.fromstring(self.page_html)
         articles = tree.xpath(
             "//*[@id='main_content']/div[@class='list_body newsflash_body']//li")
@@ -188,14 +194,16 @@ class NewsLinkPageArticleParser:
                 provider = ""
             # endregion
 
-            data = {"link": href, "title": title, "provider": provider, "time": publish_time}
+            # NaverNewsLinkModel()
+            data = NaverNewsLinkModel(title=title, publish_time=publish_time, provider=provider,
+                                      article_url=href)
             self.link_data_list.append(data)
 
             # except Exception as e:
             #     ...
-                # error_data = {"NewsLinkPageArticleParser:Error": str(e), "Article": self.current_article_number_in_page, "Date": self.page_date, "Page": self.page_number}
-                # exceptions.append(error_data)
-                # print(error_data)
+            # error_data = {"NewsLinkPageArticleParser:Error": str(e), "Article": self.current_article_number_in_page, "Date": self.page_date, "Page": self.page_number}
+            # exceptions.append(error_data)
+            # print(error_data)
         return self.link_data_list
 
     def parse_time(self, article_node):
@@ -207,7 +215,8 @@ class NewsLinkPageArticleParser:
         publish_time_text = article_node.xpath("./span[@class='date']/text()")
 
         # 최근 일경우, 하지만 1시간 이상일경우 "1시간전" 으로 표시됨
-        humanized_publish_time_outdated = article_node.xpath("./span[@class='date is_outdated']/text()")
+        humanized_publish_time_outdated = article_node.xpath(
+            "./span[@class='date is_outdated']/text()")
 
         # 최근 일경우, 1시간 미만 일경우, "12분전" 으로 표시됨
         humanized_publish_time_new = article_node.xpath("./span[@class='date is_new']/text()")
@@ -215,7 +224,8 @@ class NewsLinkPageArticleParser:
         if len(publish_time_text) > 0:
             publish_time = publish_time_text[0]
         elif len(humanized_publish_time_outdated) > 0:
-            publish_time = datetime.now().strftime(TIME_FORMAT) + "/" + humanized_publish_time_outdated[0]
+            publish_time = datetime.now().strftime(TIME_FORMAT) + "/" + \
+                           humanized_publish_time_outdated[0]
         elif len(humanized_publish_time_new) > 0:
             delta_str = humanized_publish_time_new[0]
             delta = [int(s) for s in re.findall(r'\d+', delta_str)][0]
@@ -224,7 +234,6 @@ class NewsLinkPageArticleParser:
         # endregion
 
         return publish_time
-
 
 
 def save_to_file(date, links, from_s3=FROM_S3):
@@ -252,7 +261,8 @@ def finish_using_driver(driver):
 
 def start_crawl(dt):
     driver = use_available_driver()
-    NaverDateNewsLinkCrawler(dt, driver, save_to_file, skip_crawled_date=SKIP_CRAWLED).crawl_all()
+    NaverDateNewsLinkCrawler(date=dt, driver=driver, on_items_complete=save_to_file,
+                             skip_crawled_date=SKIP_CRAWLED, on_page_crawled=None).crawl_all()
     finish_using_driver(driver)
 
 

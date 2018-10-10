@@ -49,7 +49,7 @@ class NavernewscrawlerSpider(scrapy.Spider):
                 pass
             else:
                 meta = {"naver_link_data": url_data}
-                yield scrapy.Request(url_data.full_content_link, callback=self.parse, dont_filter=True, meta=meta)
+                yield scrapy.Request(url_data.article_url, callback=self.parse, dont_filter=True, meta=meta)
 
     def parse(self, response):
         link_data = response.meta["naver_link_data"]

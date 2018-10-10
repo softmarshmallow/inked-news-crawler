@@ -1,10 +1,19 @@
 from datetime import datetime
+from multiprocessing.pool import ThreadPool
 from threading import Thread
+from timeit import repeat
+from typing import List
 
+import time
 from selenium.webdriver import Chrome
 
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_content_crawler_threaded import \
+    NaverNewsSingleArticleContentCrawler
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
+    NaverNewsLinkModel
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_link_crawler_threaded import \
     NaverDateNewsLinkCrawler
+from inkedNewsCrawler.services.vps_news_service import post_crawled_news
 from inkedNewsCrawler.utils.web_drivers import get_chrome_options
 
 # #OVERVIEW
@@ -20,8 +29,6 @@ from inkedNewsCrawler.utils.web_drivers import get_chrome_options
 # - query same news URL
 # - (safe) query news title, check if same.
 # if not, add. if conflicts, remove.
-
-
 
 
 
@@ -43,12 +50,12 @@ class LiveNewsLinkCrawler(Thread):
         super().__init__()
         self.start_time = datetime.now()
         self.refresh_count = 0
-        self.last_news_link_data = None
-        self.latest_news_link_list = []
+        self.last_news_link_data: NaverNewsLinkModel = None
+        self.latest_news_link_list: List[NaverNewsLinkModel] = []
         chrome_options = get_chrome_options()
         self.driver = Chrome(chrome_options=chrome_options)
         self.should_continue_crawling = True
-        self.conflict_check_list = []
+        self.conflict_check_list: List[NaverNewsLinkModel] = []
 
 
     def run(self):
@@ -76,7 +83,7 @@ class LiveNewsLinkCrawler(Thread):
     def on_page_crawled(self, link_data_list):
         self.should_continue_crawling = not self.reached_last_article(link_data_list)
 
-    def reached_last_article(self, new_data_list):
+    def reached_last_article(self, new_data_list: List[NaverNewsLinkModel]):
         """
         마지막으로 받아온 뉴스를 만났는지 확인함.
         :return:
@@ -90,7 +97,7 @@ class LiveNewsLinkCrawler(Thread):
         is_reached = False
         index = 0
         for n in new_data_list:
-            if n["link"] == self.last_news_link_data["link"]:
+            if n.article_url == self.last_news_link_data.article_url:
                 self.last_news_link_data = new_data_list[0]
                 is_reached = True
                 break
@@ -106,7 +113,7 @@ class LiveNewsLinkCrawler(Thread):
 
     def add_to_queue(self, link_data_item):
         for i in self.conflict_check_list:
-            if i["link"] == link_data_item["link"]:
+            if i.article_url == link_data_item.article_url:
                 return
 
         self.conflict_check_list.append(link_data_item)
@@ -117,27 +124,47 @@ class LiveNewsLinkCrawler(Thread):
             self.conflict_check_list.pop(0)
 
 
+
+# ThreadPool?
+# or single thread
 class LiveNewsContentCrawler(Thread):
     def __init__(self):
         super().__init__()
+        self.threads_count = 4
         ...
 
     def run(self):
-        ...
+
+        # pool = ThreadPool(self.threads_count)
+        # pool.starmap(self.crawl_single_article, zip(latest_news_links_data_list, repeat(self.on_item_crawl)))
+        # close the pool and wait for the work to finish
+        # pool.close()
+        # pool.join()
+
+        while True:
+            if len(latest_news_links_data_list) > 0:
+                self.crawl_single_article(latest_news_links_data_list[0], self.on_item_crawl)
+                latest_news_links_data_list.pop(0)
+            else:
+                time.sleep(CRAWLER_REFRESH_RATE)
 
 
+    def on_item_crawl(self, data):
+        print("data", data)
+        self.send_to_server(data)
 
+    def crawl_single_article(self, link_data, callback):
+        NaverNewsSingleArticleContentCrawler(link_data, callback).parse_single_article_with_callback()
 
+    def send_to_server(self, data):
+        post_crawled_news(data)
 
 
 def main():
-    pass
-
-
-def test():
     LiveNewsLinkCrawler().start()
+    LiveNewsContentCrawler().start()
 
 
 if __name__ == '__main__':
     # main()
-    test()
+    main()
