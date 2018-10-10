@@ -18,7 +18,7 @@ def callback(a):
 maxPerPage = 50
 
 def main():
-    crawler = NaverDateNewsLinkCrawler(date=datetime(2018, 1, 1), driver=driver, callback=callback, skip_crawled_date=False)
+    crawler = NaverDateNewsLinkCrawler(date=datetime(2018, 1, 1), driver=driver, on_items_complete=callback, skip_crawled_date=False)
     crawler.load_page()
 
     for i in range(20):

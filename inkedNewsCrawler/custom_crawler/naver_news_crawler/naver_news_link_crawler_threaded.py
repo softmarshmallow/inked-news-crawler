@@ -1,10 +1,11 @@
 import json
 import os.path
-from datetime import datetime
+from datetime import datetime, timedelta
 from multiprocessing.dummy import Pool as ThreadPool
 from typing import Callable
 
 import atexit
+import re
 import time
 from dateutil.rrule import DAILY, rrule
 from lxml import html
@@ -26,6 +27,7 @@ exceptions = []
 
 FROM_S3 = True
 SKIP_CRAWLED = True
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class NaverDateNewsLinkCrawler:
     """
@@ -37,13 +39,14 @@ class NaverDateNewsLinkCrawler:
 - 다음 버튼으로 다음 페지네이션으로 이동가능함.
 
     """
-    def __init__(self, date, driver, callback: Callable, skip_crawled_date=True):
+    def __init__(self, date, driver, on_page_crawled: Callable, on_items_complete: Callable, skip_crawled_date=True):
         self.link_data_list = []
         self.date = date
         self.date_str = date.strftime("%Y%m%d")
         self.url = 'https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001&listType=title&date=%s' % self.date_str
         self.driver = driver
-        self.callback = callback
+        self.on_page_crawled = on_page_crawled
+        self.on_items_complete = on_items_complete
         self.skip_crawled_date = skip_crawled_date
         self.article_count = 0
         self.current_page_number = 1
@@ -72,7 +75,7 @@ class NaverDateNewsLinkCrawler:
             if not page_moved:
                 break
 
-        self.callback(self.date, self.link_data_list)
+        self.on_items_complete(self.date, self.link_data_list)
         # self.save_to_file()
         print("Crawl Complete", self.date_str, " // AT:", datetime.now())
 
@@ -129,8 +132,13 @@ class NaverDateNewsLinkCrawler:
 
     def parse_article_in_page(self):
         html_source = self.driver.page_source
-        link_data_list = NewsLinkPageArticleParser(page_html=html_source, page_date=self.date_str, page_number=self.current_page_number).parse()
-        self.link_data_list.extend(link_data_list)
+        page_link_data_list = NewsLinkPageArticleParser(page_html=html_source, page_date=self.date_str, page_number=self.current_page_number).parse()
+
+        # single item added Callback
+        if self.on_page_crawled is not None:
+            self.on_page_crawled(page_link_data_list)
+
+        self.link_data_list.extend(page_link_data_list)
 
 
 class NewsLinkPageArticleParser:
@@ -160,41 +168,63 @@ class NewsLinkPageArticleParser:
 
         for article in articles:
             self.current_article_number_in_page += 1
-            try:
-                href = article.xpath("./a/@href")[0]
-                # region title
-                title = article.xpath("./a/text()")
-                if len(title) > 0:
-                    title = title[0]
-                else:
-                    title = ""
-                # endregion
+            # try:
+            href = article.xpath("./a/@href")[0]
+            # region title
+            title = article.xpath("./a/text()")
+            if len(title) > 0:
+                title = title[0]
+            else:
+                title = ""
+            # endregion
 
-                # region publish_time
-                publish_time = article.xpath("./span[@class='date']/text()")
-                if len(publish_time) > 0:
-                    publish_time = publish_time[0]
-                else:
-                    publish_time = article.xpath("./span[@class='date is_outdated']/text()")
-                    publish_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S") + "/" + publish_time[0]
-                # endregion
+            publish_time = self.parse_time(article)
 
-                # region provider
-                provider = article.xpath("./span[@class='writing']/text()")
-                if len(provider) >0:
-                    provider = provider[0]
-                else:
-                    provider = ""
-                # endregion
+            # region provider
+            provider = article.xpath("./span[@class='writing']/text()")
+            if len(provider) > 0:
+                provider = provider[0]
+            else:
+                provider = ""
+            # endregion
 
-                data = {"link": href, "title": title, "provider": provider, "time": publish_time}
-                self.link_data_list.append(data)
+            data = {"link": href, "title": title, "provider": provider, "time": publish_time}
+            self.link_data_list.append(data)
 
-            except Exception as e:
-                error_data = {"Error": str(e), "Article": self.current_article_number_in_page, "Date": self.page_date, "Page": self.page_number}
-                exceptions.append(error_data)
-                print(error_data)
+            # except Exception as e:
+            #     ...
+                # error_data = {"NewsLinkPageArticleParser:Error": str(e), "Article": self.current_article_number_in_page, "Date": self.page_date, "Page": self.page_number}
+                # exceptions.append(error_data)
+                # print(error_data)
         return self.link_data_list
+
+    def parse_time(self, article_node):
+
+        # region publish_time
+        publish_time = datetime.now().strftime(TIME_FORMAT)
+
+        # 일반 시간 // 과거 일경우
+        publish_time_text = article_node.xpath("./span[@class='date']/text()")
+
+        # 최근 일경우, 하지만 1시간 이상일경우 "1시간전" 으로 표시됨
+        humanized_publish_time_outdated = article_node.xpath("./span[@class='date is_outdated']/text()")
+
+        # 최근 일경우, 1시간 미만 일경우, "12분전" 으로 표시됨
+        humanized_publish_time_new = article_node.xpath("./span[@class='date is_new']/text()")
+
+        if len(publish_time_text) > 0:
+            publish_time = publish_time_text[0]
+        elif len(humanized_publish_time_outdated) > 0:
+            publish_time = datetime.now().strftime(TIME_FORMAT) + "/" + humanized_publish_time_outdated[0]
+        elif len(humanized_publish_time_new) > 0:
+            delta_str = humanized_publish_time_new[0]
+            delta = [int(s) for s in re.findall(r'\d+', delta_str)][0]
+            publish_time = datetime.now() - timedelta(minutes=delta)
+            publish_time = publish_time.strftime(TIME_FORMAT)
+        # endregion
+
+        return publish_time
+
 
 
 def save_to_file(date, links, from_s3=FROM_S3):
