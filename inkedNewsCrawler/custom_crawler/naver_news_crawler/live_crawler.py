@@ -42,7 +42,7 @@ latest_news_content_list = []
 
 
 
-MAX_QUEUE = 100
+MAX_QUEUE = 500
 
 
 class LiveNewsLinkCrawler(Thread):
