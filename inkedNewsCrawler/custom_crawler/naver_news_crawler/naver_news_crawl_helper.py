@@ -9,6 +9,8 @@ import botocore
 import boto3.s3
 from botocore.exceptions import ClientError
 
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.configs import TIME_FORMAT
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.models import NaverNewsContentModel
 from inkedNewsCrawler.settings import DATA_ROOT
 from inkedNewsCrawler.utils.aws_credentials_reader import read_credentials
 
@@ -24,15 +26,15 @@ class NaverNewsLinkModel:
     def __init__(self, publish_time, title, provider, article_url):
         self.aid = extract_aid(article_url)
         self.title = title
-        self.publish_time = publish_time
+        self.publish_time: datetime = publish_time
         self.provider = provider
         self.article_url = article_url
 
     def __str__(self):
-        return self.publish_time + " :: " + self.aid + " :: " + self.article_url + " :: " + self.title
+        return str(self.publish_time) + " :: " + self.aid + " :: " + self.article_url + " :: " + self.title
 
     def to_dictionary(self):
-        data = {"link": self.article_url, "title": self.title, "provider": self.provider, "time": self.publish_time}
+        data = {"link": self.article_url, "title": self.title, "provider": self.provider, "time": self.publish_time.strftime(TIME_FORMAT)}
         return data
 
 
@@ -88,15 +90,17 @@ class IOManager:
     # TODO Add S3 Support
     def write_links_to_file(self, date: datetime, links: List[NaverNewsLinkModel]):
         file_name = get_link_file_path(date, from_s3=self.from_s3)
+
+        dict_list = [x.to_dictionary() for x in links]
+
         if self.from_s3:
             if self.from_s3:
                 object = s3.Object(bucket_name, file_name)
-                dict_list = [x.to_dictionary() for x in links]
                 data = json.dumps(dict_list, ensure_ascii=False)
                 object.put(Body=data)
         else:
             with open(file_name, 'w', encoding='utf-8') as outfile:
-                json.dump(links, outfile, ensure_ascii=False)
+                json.dump(dict_list, outfile, ensure_ascii=False)
 
     def read_links_from_file(self, date: datetime) -> List[NaverNewsLinkModel]:
         links = []
@@ -121,15 +125,17 @@ class IOManager:
             links.append(link_data)
         return links
 
-    def write_contents_to_file(self, date: datetime, contents: []):
+    def write_contents_to_file(self, date: datetime, contents: List[NaverNewsContentModel]):
         file_name = get_content_file_path(date, from_s3=self.from_s3)
+        content_dictionary = [x.serialize() for x in contents]
+
         if self.from_s3:
             object = s3.Object(bucket_name, file_name)
-            data = json.dumps(contents, ensure_ascii=False)
+            data = json.dumps(content_dictionary, ensure_ascii=False)
             object.put(Body=data)
         else:
             with open(file_name, 'w', encoding="utf-8") as outfile:
-                json.dump(contents, outfile, ensure_ascii=False)
+                json.dump(content_dictionary, outfile, ensure_ascii=False)
 
     def read_contents_from_file(self, date: datetime) -> []:
         contents = []

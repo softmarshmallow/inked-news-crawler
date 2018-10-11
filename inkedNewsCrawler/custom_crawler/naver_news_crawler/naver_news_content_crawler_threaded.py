@@ -1,17 +1,20 @@
 import json
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
+from typing import List
+
+import arrow
 import atexit
 import requests
 from dateutil.rrule import rrule, DAILY
-from parsel import Selector
 from itertools import repeat
+from parsel import Selector
 
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.models import NaverNewsContentModel
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
     detect_url_type, IOManager, check_if_file_is_empty, get_content_file_path
 from inkedNewsCrawler.utils.random_proxy import get_random_proxy_for_requests
 from inkedNewsCrawler.utils.sanitize_html import remove_unused_tags_html
-import arrow
 
 exceptions = []
 
@@ -27,7 +30,7 @@ class NaverNewsSingleArticleContentCrawler:
             self.callback(data)
         return data
 
-    def parse_single_article(self):
+    def parse_single_article(self) -> NaverNewsContentModel:
         try:
             r = requests.get(url=self.link_data.article_url)#, proxies=proxies)
         except requests.exceptions.ConnectionError:
@@ -50,7 +53,7 @@ class NaverNewsContentCrawler:
         self.from_s3 = from_s3
         self.callback = callback
         self.check_if_crawled = check_if_crawled
-        self.content_data_list = []
+        self.content_data_list: List[NaverNewsContentModel] = []
         self.thread_for_each_request = thread_for_each_request
         self.iom = IOManager(from_s3=from_s3)
         self.crawled_count = 0
@@ -114,7 +117,7 @@ class NaverArticleContentParser:
         self.redirect_url = redirect_url
         self.url_type = detect_url_type(redirect_url)
 
-    def parse(self):
+    def parse(self) -> NaverNewsContentModel:
         try:
             if self.url_type == "default":
                 data = self.parse_from_full_content_url(response=self.selector)
@@ -125,18 +128,15 @@ class NaverArticleContentParser:
             else:
                 raise Exception
 
-            # item = NaverNewsContentItem()
-            # TODO Move this to class object
-            item = {}
-            item["article_id"] = self.link_data.aid
-            item["article_url"] = self.link_data.article_url
-            item["redirect_url"] = self.redirect_url
-            item["origin_url"] = data[3]
-            item["title"] = data[0]
-            item["body_html"] = data[1]
-            # item["time"] = data[2].strftime("%Y-%m-%d %H:%M:%S")
-            item["time"] = self.link_data.publish_time
-            item["provider"] = self.link_data.provider
+            item = NaverNewsContentModel()
+            item.article_id = self.link_data.aid
+            item.article_url = self.link_data.article_url
+            item.redirect_url = self.redirect_url
+            item.origin_url = data[3]
+            item.title = data[0]
+            item.body_html = data[1]
+            item.publish_time = self.link_data.publish_time
+            item.provider = self.link_data.provider
 
             return item
         except Exception as e:

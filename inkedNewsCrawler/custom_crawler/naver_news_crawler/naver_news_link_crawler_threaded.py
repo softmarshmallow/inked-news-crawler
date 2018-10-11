@@ -3,7 +3,7 @@ import os.path
 from datetime import datetime, timedelta
 from multiprocessing.dummy import Pool as ThreadPool
 from typing import Callable, List
-
+import warnings
 import atexit
 import re
 import time
@@ -12,6 +12,7 @@ from lxml import html
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 
+from inkedNewsCrawler.custom_crawler.naver_news_crawler.configs import TIME_FORMAT
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
     check_if_links_empty, \
     IOManager, NaverNewsLinkModel
@@ -25,7 +26,6 @@ exceptions = []
 
 FROM_S3 = True
 SKIP_CRAWLED = True
-TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 class NaverDateNewsLinkCrawler:
@@ -136,7 +136,7 @@ class NaverDateNewsLinkCrawler:
     def parse_article_in_page(self):
         html_source = self.driver.page_source
         page_link_data_list = NewsLinkPageArticleParser(page_html=html_source,
-                                                        page_date=self.date_str,
+                                                        page_date=self.date,
                                                         page_number=self.current_page_number).parse()
 
         # single item added Callback
@@ -157,9 +157,9 @@ class NewsLinkPageArticleParser:
     :return list of news_link_data
     '''
 
-    def __init__(self, page_html, page_number, page_date):
+    def __init__(self, page_html, page_number, page_date: datetime):
         self.page_html = page_html
-        self.page_date = page_date
+        self.page_date: datetime = page_date
         self.page_number = page_number
         self.current_article_number_in_page = 0
         self.link_data_list: List[NaverNewsLinkModel] = []
@@ -206,13 +206,13 @@ class NewsLinkPageArticleParser:
             # print(error_data)
         return self.link_data_list
 
-    def parse_time(self, article_node):
+    def parse_time(self, article_node) -> datetime:
 
         # region publish_time
         publish_time = datetime.now().strftime(TIME_FORMAT)
 
         # 일반 시간 // 과거 일경우
-        publish_time_text = article_node.xpath("./span[@class='date']/text()")
+        normal_publish_time_text = article_node.xpath("./span[@class='date']/text()")
 
         # 최근 일경우, 하지만 1시간 이상일경우 "1시간전" 으로 표시됨
         humanized_publish_time_outdated = article_node.xpath(
@@ -221,16 +221,21 @@ class NewsLinkPageArticleParser:
         # 최근 일경우, 1시간 미만 일경우, "12분전" 으로 표시됨
         humanized_publish_time_new = article_node.xpath("./span[@class='date is_new']/text()")
 
-        if len(publish_time_text) > 0:
-            publish_time = publish_time_text[0]
+        if len(normal_publish_time_text) > 0:
+            normal_publish_time_text = normal_publish_time_text[0]
+            publish_time = datetime.strptime(normal_publish_time_text, "%Y.%m.%d %H:%M")
+
         elif len(humanized_publish_time_outdated) > 0:
-            publish_time = datetime.now().strftime(TIME_FORMAT) + "/" + \
+            publish_time_text = datetime.now().strftime(TIME_FORMAT) + "/" + \
                            humanized_publish_time_outdated[0]
+            warnings.warn("this time is not convertible. :: " + publish_time_text)
+
+            publish_time = self.page_date
         elif len(humanized_publish_time_new) > 0:
             delta_str = humanized_publish_time_new[0]
             delta = [int(s) for s in re.findall(r'\d+', delta_str)][0]
             publish_time = datetime.now() - timedelta(minutes=delta)
-            publish_time = publish_time.strftime(TIME_FORMAT)
+            publish_time = publish_time
         # endregion
 
         return publish_time

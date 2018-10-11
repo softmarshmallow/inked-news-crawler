@@ -3,7 +3,7 @@ from multiprocessing.pool import ThreadPool
 from threading import Thread
 from timeit import repeat
 from typing import List
-
+import warnings
 import time
 from selenium.webdriver import Chrome
 
@@ -31,16 +31,12 @@ from inkedNewsCrawler.utils.web_drivers import get_chrome_options
 # if not, add. if conflicts, remove.
 
 
-
 # Crawler refresh rate in seconds
 # recommended 5 주기가 빠를수록 누락되는 데이터가 생김. 이는 네이버뉴스측 문제로, 최신순으로 업데이트 되는 과정에서 가장 최근 보다 하단에 새로운 뉴스가 배치되는 경우가 있음.
-CRAWLER_REFRESH_RATE = 0.2
-
+CRAWLER_REFRESH_RATE = 1
 
 latest_news_links_data_list = []
 latest_news_content_list = []
-
-
 
 MAX_QUEUE = 500
 
@@ -57,22 +53,23 @@ class LiveNewsLinkCrawler(Thread):
         self.should_continue_crawling = True
         self.conflict_check_list: List[NaverNewsLinkModel] = []
 
-
     def run(self):
         while True:
             if self.refresh_required():
                 self.crawl()
-                self.refresh_count += 1
 
     def refresh_required(self) -> bool:
         target_elapsed_time = CRAWLER_REFRESH_RATE * self.refresh_count
         # print("target_elapsed_time", target_elapsed_time)
         if (datetime.now() - self.start_time).total_seconds() > target_elapsed_time:
+            self.refresh_count += 1
             return True
         return False
 
     def crawl(self):
-        crawler = NaverDateNewsLinkCrawler(date=datetime.now(), driver=self.driver, on_items_complete=None, skip_crawled_date=False, on_page_crawled=self.on_page_crawled)
+        crawler = NaverDateNewsLinkCrawler(date=datetime.now(), driver=self.driver,
+                                           on_items_complete=None, skip_crawled_date=False,
+                                           on_page_crawled=self.on_page_crawled)
         crawler.load_page()
         self.should_continue_crawling = True
 
@@ -81,35 +78,51 @@ class LiveNewsLinkCrawler(Thread):
             crawler.move_to_next_page()
 
     def on_page_crawled(self, link_data_list):
-        self.should_continue_crawling = not self.reached_last_article(link_data_list)
 
-    def reached_last_article(self, new_data_list: List[NaverNewsLinkModel]):
+        (is_reached, reach_index) = self.reached_last_article(link_data_list)
+
+        self.should_continue_crawling = not is_reached
+
+        link_data_list.reverse()
+        for data in link_data_list:
+            self.add_to_queue(data)
+
+        # none_added_items = list(link_data_list[:index+1])
+        # none_added_items.reverse()
+        # for none_added_item in none_added_items:
+        #     self.add_to_queue(none_added_item)
+
+    def reached_last_article(self, new_data_list: List[NaverNewsLinkModel]) -> (bool, int):
         """
-        마지막으로 받아온 뉴스를 만났는지 확인함.
+        마지막으로 받아온 뉴스를 만났는지 확인함. via URL
+        마지막으로 받아온 뉴스가 새로 받아온 뉴스에서 사라질 경우? via Time
         :return:
         """
+        index = 0
+
 
         # 이전 데이터가 없을경우, 최초 실행일 경우
         if self.last_news_link_data is None:
             self.last_news_link_data = new_data_list[0]
-            return True
+            return True, index
 
         is_reached = False
-        index = 0
         for n in new_data_list:
-            if n.article_url == self.last_news_link_data.article_url:
+            over_timed = self.last_news_link_data.publish_time > n.publish_time
+            reached_article = n.article_url == self.last_news_link_data.article_url
+            if not reached_article and over_timed:
+                warnings.warn("There was an exception, haven't reached last article yet, but time was older (its providers fault, nothing we can do..)")
+
+            if reached_article or over_timed:
                 self.last_news_link_data = new_data_list[0]
                 is_reached = True
                 break
             index += 1
         # Add items
 
-        none_added_items = list(new_data_list[:index+1])
-        none_added_items.reverse()
-        for none_added_item in none_added_items:
-            self.add_to_queue(none_added_item)
-
-        return is_reached
+        if not is_reached:
+            warnings.warn("CHECK THIS:: " + str(self.last_news_link_data) + str(new_data_list))
+        return is_reached, index
 
     def add_to_queue(self, link_data_item):
         for i in self.conflict_check_list:
@@ -118,11 +131,16 @@ class LiveNewsLinkCrawler(Thread):
 
         self.conflict_check_list.append(link_data_item)
         latest_news_links_data_list.append(link_data_item)
-        print(link_data_item)
+        print("add_to_queue", link_data_item)
 
         while len(self.conflict_check_list) > MAX_QUEUE:
             self.conflict_check_list.pop(0)
 
+    def check_conflict(self, link_data_item):
+        for i in self.conflict_check_list:
+            if i.article_url == link_data_item.article_url:
+                return True
+        return False
 
 
 # ThreadPool?
@@ -148,16 +166,18 @@ class LiveNewsContentCrawler(Thread):
             else:
                 time.sleep(CRAWLER_REFRESH_RATE)
 
-
     def on_item_crawl(self, data):
         print("data", data)
         self.send_to_server(data)
 
     def crawl_single_article(self, link_data, callback):
-        NaverNewsSingleArticleContentCrawler(link_data, callback).parse_single_article_with_callback()
+        NaverNewsSingleArticleContentCrawler(link_data,
+                                             callback).parse_single_article_with_callback()
+        ...
 
     def send_to_server(self, data):
         post_crawled_news(data)
+        ...
 
 
 def main():
