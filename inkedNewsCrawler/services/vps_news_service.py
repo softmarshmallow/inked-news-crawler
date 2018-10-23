@@ -6,16 +6,20 @@ import requests
 
 
 request_url = BASE_SERVER_URL + "api/news"
+print(request_url)
 
 
 def post_crawled_news(news_content_data: NaverNewsContentModel):
-    json_serializable = news_content_data.serialize()
-    r = requests.post(request_url, json=json_serializable)
-    if r.status_code == 200:
-        print("CREATED", r.text)
-    else:
-        print("FAILED", r.status_code, news_content_data)
+    try:
+        json_serializable = news_content_data.serialize()
+        r = requests.post(request_url, json=json_serializable)
+        if r.status_code == 200:
+            print("CREATED", r.text)
+        else:
+            print("FAILED", r.status_code, news_content_data)
 
+    except Exception as e:
+        print(e)
 
 
 
