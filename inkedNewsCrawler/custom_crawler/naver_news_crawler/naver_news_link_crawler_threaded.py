@@ -11,6 +11,7 @@ from dateutil.rrule import DAILY, rrule
 from lxml import html
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from langdetect import detect
 
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.configs import TIME_FORMAT
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
@@ -194,7 +195,6 @@ class NewsLinkPageArticleParser:
                 provider = ""
             # endregion
 
-            # NaverNewsLinkModel()
             data = NaverNewsLinkModel(title=title, publish_time=publish_time, provider=provider,
                                       article_url=href)
             self.link_data_list.append(data)
@@ -275,7 +275,7 @@ def crawl_all_links(THREAD_COUNT, start_date, end_date):
     dates = rrule(DAILY, dtstart=start_date, until=end_date)
 
     from inkedNewsCrawler.utils.web_drivers import get_chrome_options
-    chrome_options = get_chrome_options()
+    chrome_options = get_chrome_options(headless=False)
     # instantiate browsers
     for i in range(THREAD_COUNT):
         print("SETUP Driver %i" % (i + 1))

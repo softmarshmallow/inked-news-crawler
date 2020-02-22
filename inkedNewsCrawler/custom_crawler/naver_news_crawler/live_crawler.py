@@ -48,7 +48,7 @@ class LiveNewsLinkCrawler(Thread):
         self.refresh_count = 0
         self.last_news_link_data: NaverNewsLinkModel = None
         self.latest_news_link_list: List[NaverNewsLinkModel] = []
-        chrome_options = get_chrome_options()
+        chrome_options = get_chrome_options(headless=False)
         self.driver = Chrome(chrome_options=chrome_options)
         self.should_continue_crawling = True
         self.conflict_check_list: List[NaverNewsLinkModel] = []
@@ -143,13 +143,10 @@ class LiveNewsLinkCrawler(Thread):
         return False
 
 
-# ThreadPool?
-# or single thread
 class LiveNewsContentCrawler(Thread):
     def __init__(self):
         super().__init__()
         self.threads_count = 4
-        ...
 
     def run(self):
 
@@ -167,7 +164,7 @@ class LiveNewsContentCrawler(Thread):
                 time.sleep(CRAWLER_REFRESH_RATE)
 
     def on_item_crawl(self, data):
-        print("data", data)
+        print("data: ", data)
         self.send_to_server(data)
 
     def crawl_single_article(self, link_data, callback):
@@ -176,7 +173,7 @@ class LiveNewsContentCrawler(Thread):
         ...
 
     def send_to_server(self, data):
-        post_crawled_news(data)
+        # post_crawled_news(data)
         ...
 
 
@@ -184,6 +181,11 @@ def main():
     LiveNewsLinkCrawler().start()
     LiveNewsContentCrawler().start()
 
+
+#  add lang detection filter
+##             # ignore if title includes english content
+    # lang = detect(title)
+    # print(lang, title)
 
 if __name__ == '__main__':
     # main()
