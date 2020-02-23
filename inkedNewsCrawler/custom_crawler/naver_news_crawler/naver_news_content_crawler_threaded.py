@@ -160,14 +160,14 @@ class NaverArticleContentParser:
         body_html = remove_unused_tags_html(body_html)
         origin_url = response.xpath(
             '''//*[@id="main_content"]//div[@class="article_info"]//div[@class="sponsor"]/a[@class="btn_artialoriginal nclicks(are.ori,'214', 'nilGParam', '214_57772f5131149491')"]/@href''').extract_first()
-        # example:  기사입력 2020.02.23. 오후 7:54
+        # example:  2020.02.23. 오후 7:54
         raw_time = response.xpath(
             '//*[@id="main_content"]//div[@class="article_info"]//span[@class="t11"]/text()').extract_first()
         try:
-            time = arrow.get(raw_time, 'YYYY.MM.DD. HH:mm').datetime
+            time = arrow.get(raw_time, 'YYYY.MM.DD. A HH:mm').datetime
         except Exception as e:
-            print("failed to parse time. please update the crawler")
-            time = datetime.now()
+            time = arrow.get(raw_time, 'YYYY.MM.DD.').datetime
+            # print("failed to parse time. please update the crawler")
 
         return title, body_html, time, origin_url
 

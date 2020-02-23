@@ -158,12 +158,26 @@ class NewsLinkPageArticleParser:
     :return list of news_link_data
     '''
 
-    def __init__(self, page_html, page_number, page_date: datetime):
+    def __init__(self, page_html, page_number, page_date: datetime, accepted_languages=None):
+        if accepted_languages is None:
+            accepted_languages = ['ko']
+
         self.page_html = page_html
         self.page_date: datetime = page_date
         self.page_number = page_number
         self.current_article_number_in_page = 0
         self.link_data_list: List[NaverNewsLinkModel] = []
+        self.accepted_languages = accepted_languages
+
+    def pre_filter(self, title) -> bool:
+        try:
+            # 1. lang filter
+            if detect(title) in self.accepted_languages:
+                return True
+            else:
+                return False
+        except Exception:
+            return True
 
     def parse(self) -> List[NaverNewsLinkModel]:
         tree = html.fromstring(self.page_html)
@@ -178,6 +192,7 @@ class NewsLinkPageArticleParser:
             # try:
             href = article.xpath("./a/@href")[0]
             # region title
+            lang = 'ko'
             title = article.xpath("./a/text()")
             if len(title) > 0:
                 title = title[0]
@@ -197,13 +212,10 @@ class NewsLinkPageArticleParser:
 
             data = NaverNewsLinkModel(title=title, publish_time=publish_time, provider=provider,
                                       article_url=href)
-            self.link_data_list.append(data)
 
-            # except Exception as e:
-            #     ...
-            # error_data = {"NewsLinkPageArticleParser:Error": str(e), "Article": self.current_article_number_in_page, "Date": self.page_date, "Page": self.page_number}
-            # exceptions.append(error_data)
-            # print(error_data)
+            if self.pre_filter(title): # append if not filtered
+                self.link_data_list.append(data)
+
         return self.link_data_list
 
     def parse_time(self, article_node) -> datetime:

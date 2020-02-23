@@ -42,14 +42,13 @@ MAX_QUEUE = 500
 
 
 class LiveNewsLinkCrawler(Thread):
-    def __init__(self):
+    def __init__(self, driver):
         super().__init__()
         self.start_time = datetime.now()
         self.refresh_count = 0
         self.last_news_link_data: NaverNewsLinkModel = None
         self.latest_news_link_list: List[NaverNewsLinkModel] = []
-        chrome_options = get_chrome_options(headless=False)
-        self.driver = Chrome(chrome_options=chrome_options)
+        self.driver = driver
         self.should_continue_crawling = True
         self.conflict_check_list: List[NaverNewsLinkModel] = []
 
@@ -177,16 +176,58 @@ class LiveNewsContentCrawler(Thread):
         ...
 
 
-def main():
-    LiveNewsLinkCrawler().start()
+driver = None
+
+
+def main(accepted_langs, do_schedule_restart=True):
+    global driver
+    if do_schedule_restart:
+        schedule_restart()
+
+    if driver is None:
+        chrome_options = get_chrome_options(headless=False)
+        driver = Chrome(chrome_options=chrome_options)
+    LiveNewsLinkCrawler(driver=driver).start()
     LiveNewsContentCrawler().start()
 
 
-#  add lang detection filter
-##             # ignore if title includes english content
-    # lang = detect(title)
-    # print(lang, title)
+def schedule_restart():
+    import threading
+    from datetime import datetime, timedelta
+
+    today = datetime.today()
+    today = datetime(year=today.year, month=today.month, day=today.day, hour=0, minute=0, second=0, microsecond=0)
+    now = datetime.now()
+    run_at = today + timedelta(days=1, hours=1)
+    print(f"crawler is scheduled to restart at {run_at}")
+    delay = (run_at - now).total_seconds()
+    threading.Timer(delay, restart_program).start()
+
+
+def restart_program():
+    """Restarts the current program, with file objects and descriptors
+       cleanup
+    """
+    import os
+    import sys
+    import psutil
+    import logging
+
+    driver.quit()
+
+    try:
+        p = psutil.Process(os.getpid())
+        for handler in p.open_files() + p.connections():
+            os.close(handler.fd)
+    except Exception as e:
+        logging.error(e)
+
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
+    # os.execl(sys.executable, sys.executable, *sys.argv)
+
 
 if __name__ == '__main__':
     # main()
-    main()
+    main(accepted_langs=['ko'])
