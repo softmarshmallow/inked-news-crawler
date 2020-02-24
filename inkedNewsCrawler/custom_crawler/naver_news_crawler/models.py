@@ -17,10 +17,9 @@ class NaverNewsContentModel:
     def serialize(self):
         item = {
             "article_id": self.article_id,
-            "time": self.publish_time.strftime(TIME_FORMAT),
+            "time": self.publish_time,
             "title": self.title,
             "article_url": self.article_url,
-            "redirect_url": self.redirect_url,
             "origin_url": self.origin_url,
             "body_html": self.body_html,
             "provider": self.provider

@@ -135,7 +135,7 @@ class NaverArticleContentParser:
             item.origin_url = data[3]
             item.title = data[0]
             item.body_html = data[1]
-            item.publish_time = self.link_data.publish_time
+            item.publish_time = data[2]
             item.provider = self.link_data.provider
 
             return item
@@ -159,7 +159,7 @@ class NaverArticleContentParser:
         body_html = response.xpath('//*[@id="articleBodyContents"]').extract_first()
         body_html = remove_unused_tags_html(body_html)
         origin_url = response.xpath(
-            '''//*[@id="main_content"]//div[@class="article_info"]//div[@class="sponsor"]/a[@class="btn_artialoriginal nclicks(are.ori,'214', 'nilGParam', '214_57772f5131149491')"]/@href''').extract_first()
+            '''//*[@id="main_content"]//div[@class="article_info"]//div[@class="sponsor"]/a[1]/@href''').extract_first()
         # example:  2020.02.23. 오후 7:54
         raw_time = response.xpath(
             '//*[@id="main_content"]//div[@class="article_info"]//span[@class="t11"]/text()').extract_first()

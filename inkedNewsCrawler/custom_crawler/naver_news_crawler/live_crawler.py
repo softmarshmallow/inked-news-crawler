@@ -13,6 +13,7 @@ from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper 
     NaverNewsLinkModel
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_link_crawler_threaded import \
     NaverDateNewsLinkCrawler
+from inkedNewsCrawler.services.database_direct import insert
 from inkedNewsCrawler.services.vps_news_service import post_crawled_news
 from inkedNewsCrawler.utils.web_drivers import get_chrome_options
 
@@ -172,12 +173,13 @@ class LiveNewsContentCrawler(Thread):
         ...
 
     def send_to_server(self, data):
-        # post_crawled_news(data)
-        ...
+        if data is not None:
+            insert(data)
+
+
 
 
 driver = None
-
 
 def main(accepted_langs, do_schedule_restart=True):
     global driver
