@@ -188,7 +188,7 @@ def main(accepted_langs, do_schedule_restart=True):
         schedule_restart()
 
     if driver is None:
-        chrome_options = get_chrome_options(headless=False)
+        chrome_options = get_chrome_options(headless=True)
         driver = Chrome(chrome_options=chrome_options)
     LiveNewsLinkCrawler(driver=driver).start()
     LiveNewsContentCrawler().start()
