@@ -32,3 +32,7 @@
 
 ### Instead of using virtualenv you can use this command in Python3
     python3 -m venv myenv
+    
+### Add python module to path
+   `export PYTHONPATH="${PYTHONPATH}:inkedNewsCrawler"`
+ `chmod +x crawler.sh`

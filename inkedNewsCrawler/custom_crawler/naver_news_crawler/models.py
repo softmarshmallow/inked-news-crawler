@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import pytz
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.configs import TIME_FORMAT
 
 
@@ -17,7 +17,7 @@ class NaverNewsContentModel:
     def serialize(self):
         item = {
             "article_id": self.article_id,
-            "time": self.publish_time,
+            "time": self.publish_time.isoformat(),
             "title": self.title,
             "article_url": self.article_url,
             "origin_url": self.origin_url,

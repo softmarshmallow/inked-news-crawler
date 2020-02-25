@@ -174,7 +174,8 @@ class LiveNewsContentCrawler(Thread):
 
     def send_to_server(self, data):
         if data is not None:
-            insert(data)
+            post_crawled_news(data)
+            # insert(data)
 
 
 

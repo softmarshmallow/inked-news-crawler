@@ -164,7 +164,8 @@ class NaverArticleContentParser:
         raw_time = response.xpath(
             '//*[@id="main_content"]//div[@class="article_info"]//span[@class="t11"]/text()').extract_first()
         try:
-            time = arrow.get(raw_time, 'YYYY.MM.DD. A HH:mm').datetime
+            raw_time = translate_time(raw_time)
+            time = arrow.get(raw_time, 'YYYY.MM.DD. A h:mm').datetime
         except Exception as e:
             time = arrow.get(raw_time, 'YYYY.MM.DD.').datetime
             # print("failed to parse time. please update the crawler")
