@@ -4,6 +4,10 @@ from selenium import webdriver
 def get_chrome_options(headless=True, disable_javascript=True, disable_images=True):
     options = webdriver.ChromeOptions()
     prefs = {}
+
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+
     if headless:
         options.add_argument('--headless')
     if disable_images:

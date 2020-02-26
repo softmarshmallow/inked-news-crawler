@@ -17,7 +17,7 @@ def post_crawled_news(news_content_data: NaverNewsContentModel):
             # print("CREATED", r.text)
             pass
         else:
-            warnings.warn(f"FAILED ${r.status_code} \n${r.text}\n\n${news_content_data}")
+            warnings.warn(f"FAILED {r.status_code} \n{r.text}")
 
     except Exception as e:
         print(e)
