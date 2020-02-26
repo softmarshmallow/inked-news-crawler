@@ -178,9 +178,8 @@ class LiveNewsContentCrawler(Thread):
             # insert(data)
 
 
-
-
 driver = None
+
 
 def main(accepted_langs, do_schedule_restart=True):
     global driver
