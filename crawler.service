@@ -1,0 +1,13 @@
+[Unit]
+Description=inked news crawler service
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=fork
+Restart=always
+RestartSec=1
+User=root
+ExecStart=/home/ubuntu/app/inked-news-crawler/crawler.sh
+
+[Install]
+WantedBy=multi-user.target

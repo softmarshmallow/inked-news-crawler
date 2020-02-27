@@ -14,18 +14,27 @@ class NaverNewsContentModel:
         self.publish_time: datetime = None
         self.provider: str = None
 
-    def serialize(self):
-        item = {
-            "article_id": self.article_id,
-            "time": self.publish_time.isoformat(),
-            "title": self.title,
-            "article_url": self.article_url,
-            "origin_url": self.origin_url,
-            "body_html": self.body_html,
-            "provider": self.provider
-        }
+    def serialize(self, debug=False):
+        if debug: # shorter serialization for debug logging purpose
+            item = {
+                "time": self.publish_time.isoformat(),
+                "title": self.title,
+                "origin_url": self.origin_url,
+                "body_html": self.body_html[0:30],
+                "provider": self.provider
+            }
+        else:
+            item = {
+                "article_id": self.article_id,
+                "time": self.publish_time.isoformat(),
+                "title": self.title,
+                "article_url": self.article_url,
+                "origin_url": self.origin_url,
+                "body_html": self.body_html,
+                "provider": self.provider
+            }
         return item
 
     def __str__(self):
-        return str(self.serialize())
+        return str(self.serialize(debug=True))
 
