@@ -139,6 +139,16 @@ class IOManager:
 
     def read_contents_from_file(self, date: datetime) -> []:
         contents = []
+        data = self.read_raw_contents_from_file(date)
+        if data is None:
+            return []
+
+        for record in data:
+            # Record to instance
+            contents.append(record)
+        return contents
+
+    def read_raw_contents_from_file(self, date: datetime):
         file_name = get_content_file_path(date, from_s3=self.from_s3)
         if self.from_s3:
             try:
@@ -147,16 +157,12 @@ class IOManager:
                 data = json.loads(data)
             except ClientError as e:
                 print("Client Error", e, file_name)
-                return []
-
+                return None
         else:
             with open(file_name) as f:
                 data = json.load(f)
+        return data
 
-        for record in data:
-            # Record to instance
-            contents.append(record)
-        return contents
 
 
 def check_if_file_is_exists(file: str, from_s3=False):

@@ -9,6 +9,8 @@ start_date = datetime(2015, 1, 1)
 end_date = datetime(2018, 8, 1)
 iom = IOManager(from_s3=False)
 # Export data as plain text
+
+
 def export_data():
     all_title_list = []
     dates = rrule(DAILY, dtstart=start_date, until=end_date)
@@ -21,5 +23,5 @@ def export_data():
     json.dump(all_title_list, "export.json", ensure_ascii=False)
 
 
-
-export_data()
+if __name__ == "__main__":
+    export_data()

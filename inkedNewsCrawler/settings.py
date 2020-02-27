@@ -28,7 +28,12 @@ SELENIUM_DRIVER_ARGUMENTS=['--headless']  # '--headless' if using chrome instead
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
 )
-DATA_ROOT = os.path.join(BASE_DIR, "data/")
+
+DATA_USES_EXTERNAL_DISK_STORAGE = True
+if DATA_USES_EXTERNAL_DISK_STORAGE:
+    DATA_ROOT = os.path.join("/Volumes/TimeMachine/DATA/inked/", "data/")
+else:
+    DATA_ROOT = os.path.join(BASE_DIR, "data/")
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'inkedNewsCrawler (+http://www.yourdomain.com)'
