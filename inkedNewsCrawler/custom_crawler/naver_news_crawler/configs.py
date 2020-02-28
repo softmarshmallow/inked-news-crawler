@@ -1,1 +1,1 @@
-TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+TIME_FORMAT = "%Y.%m.%d %H:%M"

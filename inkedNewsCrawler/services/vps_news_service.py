@@ -6,21 +6,22 @@ import requests
 
 
 request_url = BASE_SERVER_URL + "api/news/"
+request_url_batch = BASE_SERVER_URL + "api/news/batch"
 headers = {"Authorization": f"Api-Key {API_KEY}"}
 
 
 def post_crawled_news_batch(data):
     try:
-        r = requests.post(request_url, json=data, headers=headers)
+        r = requests.post(request_url_batch, json=data, headers=headers)
         if 200 <= r.status_code < 300:
-            return True
+            return True, '201'
         else:
             warnings.warn(f"FAILED {r.status_code} \n{r.text}")
-            return False
+            return False, r.text
 
     except Exception as e:
         print(e)
-        return False
+        return False, e
 
 
 def post_crawled_news(news_content_data: NaverNewsContentModel, already_serialized=False):
@@ -31,14 +32,14 @@ def post_crawled_news(news_content_data: NaverNewsContentModel, already_serializ
             jspn = news_content_data.serialize()
         r = requests.post(request_url, json=jspn, headers=headers)
         if 200 <= r.status_code < 300:
-            return True
+            return True, '201'
         else:
             warnings.warn(f"FAILED {r.status_code} \n{r.text}")
-            return False
+            return False, r
 
     except Exception as e:
         print(e)
-        return False
+        return False, e
 
 
 

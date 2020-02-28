@@ -11,8 +11,8 @@ from dateutil.rrule import DAILY, rrule
 from lxml import html
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
-from langdetect import detect
 
+from inkedNewsCrawler.filters.lang_filter import accept_languages
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.configs import TIME_FORMAT
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
     check_if_links_empty, \
@@ -170,14 +170,8 @@ class NewsLinkPageArticleParser:
         self.accepted_languages = accepted_languages
 
     def pre_filter(self, title) -> bool:
-        try:
-            # 1. lang filter
-            if detect(title) in self.accepted_languages:
-                return True
-            else:
-                return False
-        except Exception:
-            return True
+        filter_lang = accept_languages(self.accepted_languages, title)
+        return filter_lang
 
     def parse(self) -> List[NaverNewsLinkModel]:
         tree = html.fromstring(self.page_html)
