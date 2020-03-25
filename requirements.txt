@@ -27,7 +27,6 @@ jupyter-client==5.2.3
 jupyter-console==5.2.0
 jupyter-core==4.4.0
 lxml==4.2.3
-MarkupSafe==1.0
 mistune==0.8.3
 nbconvert==5.3.1
 nbformat==4.4.0
@@ -71,7 +70,6 @@ w3lib==1.19.0
 wcwidth==0.1.7
 webencodings==0.5.1
 widgetsnbextension==3.4.0
-zope.interface==4.5.0
 dateparser==0.7.0
 arrow==0.12.1
 html2text==2018.1.9

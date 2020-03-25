@@ -1,5 +1,4 @@
 from datetime import datetime
-import pytz
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.configs import TIME_FORMAT
 
 
@@ -13,6 +12,7 @@ class NaverNewsContentModel:
         self.body_html: str = None
         self.publish_time: datetime = None
         self.provider: str = None
+        self.meta: NaverNewsMetaModel = NaverNewsMetaModel()
 
         if kwargs is not None: # dict base serialization
             self.article_id = kwargs['article_id']
@@ -30,8 +30,9 @@ class NaverNewsContentModel:
                 "time": self.publish_time.isoformat(),
                 "title": self.title,
                 "origin_url": self.origin_url,
-                "body_html": self.body_html[0:30],
-                "provider": self.provider
+                "content": self.body_html[0:30],
+                "provider": self.provider,
+                "meta": self.meta.serialize()
             }
         else:
             item = {
@@ -40,11 +41,29 @@ class NaverNewsContentModel:
                 "title": self.title,
                 "article_url": self.article_url,
                 "origin_url": self.origin_url,
-                "body_html": self.body_html,
-                "provider": self.provider
+                "content": self.body_html,
+                "provider": self.provider,
+                "meta": self.meta.serialize()
             }
         return item
 
     def __str__(self):
         return str(self.serialize(debug=True))
 
+
+class NaverNewsMetaModel:
+    def __init__(self, **kwargs):
+        self.article_id = None
+        self.source = "NAVER" # this will not change
+
+        if kwargs is not None: # dict base serialization
+            self.provider = kwargs['provider']
+            self.article_id = kwargs['article_id']
+
+    def serialize(self, debug=False):
+        item = {
+            "article_id": self.article_id,
+            "provider": self.provider,
+            "source": self.source,
+        }
+        return item

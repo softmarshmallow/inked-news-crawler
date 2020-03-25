@@ -50,7 +50,7 @@ if __name__ == "__main__":
         "redirect_url": "",
         "origin_url": "origin_url",
         "title": "this is a test news",
-        "body_html": "empty",
+        "content": "empty",
         "time": "2100-12-25 12:12:12",
         "provider": "inked-developer-test-channel"
     })
