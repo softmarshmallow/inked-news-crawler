@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from multiprocessing.pool import ThreadPool
 from typing import List
+from warnings import warn
 
 import arrow
 import atexit
@@ -140,10 +141,10 @@ class NaverArticleContentParser:
 
             return item
         except Exception as e:
+            warn(str(e.__traceback__))
             print("ERR", self.link_data, e)
             # skipped_urls.append(self.link_data)
             # TODO add skipped support
-            ...
 
     @DeprecationWarning
     def parse_from_print_content_url(self, response):

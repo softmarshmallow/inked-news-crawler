@@ -164,8 +164,10 @@ class LiveNewsContentCrawler(Thread):
                 time.sleep(CRAWLER_REFRESH_RATE)
 
     def on_item_crawl(self, data):
-        print("data: ", data)
-        self.send_to_server(data)
+        if (data is None):
+            warnings.warn("data from `NaverNewsSingleArticleContentCrawler` is none, please check for more details")
+        else:
+            self.send_to_server(data)
 
     def crawl_single_article(self, link_data, callback):
         NaverNewsSingleArticleContentCrawler(link_data,

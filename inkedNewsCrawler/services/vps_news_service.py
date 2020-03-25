@@ -5,7 +5,7 @@ from inkedNewsCrawler.services.api_controller import BASE_SERVER_URL, API_KEY
 import requests
 
 
-request_url = BASE_SERVER_URL + "api/news/"
+request_url = BASE_SERVER_URL + "api/news/crawled"
 request_url_batch = BASE_SERVER_URL + "api/news/batch"
 headers = {"Authorization": f"Api-Key {API_KEY}"}
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
         "article_id": 0000,
         "article_url": "",
         "redirect_url": "",
-        "origin_url": "origin_url",
+        "originUrl": "originUrl",
         "title": "this is a test news",
         "content": "empty",
         "time": "2100-12-25 12:12:12",
