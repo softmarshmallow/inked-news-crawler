@@ -78,7 +78,9 @@ class LiveNewsLinkCrawler(Thread):
             crawler.move_to_next_page()
 
     def on_page_crawled(self, link_data_list):
-
+        if link_data_list is None or len(link_data_list) == 0:
+            warnings.warn("page is crawled, but no links are parsed.. please check")
+            return
         (is_reached, reach_index) = self.reached_last_article(link_data_list)
 
         self.should_continue_crawling = not is_reached
@@ -93,6 +95,11 @@ class LiveNewsLinkCrawler(Thread):
         #     self.add_to_queue(none_added_item)
 
     def reached_last_article(self, new_data_list: List[NaverNewsLinkModel]) -> (bool, int):
+
+        if new_data_list is None or len(new_data_list):
+            warnings.warn("news data list is empty or none.. passing")
+            return True, -1
+
         """
         마지막으로 받아온 뉴스를 만났는지 확인함. via URL
         마지막으로 받아온 뉴스가 새로 받아온 뉴스에서 사라질 경우? via Time

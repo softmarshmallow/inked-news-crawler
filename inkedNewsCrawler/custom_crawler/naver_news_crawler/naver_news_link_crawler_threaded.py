@@ -29,6 +29,10 @@ FROM_S3 = True
 SKIP_CRAWLED = True
 
 
+def normalize_title(title: str):
+    return re.sub(r"[\n\t\s]*", "", title)
+
+
 class NaverDateNewsLinkCrawler:
     """
 
@@ -45,6 +49,7 @@ class NaverDateNewsLinkCrawler:
         self.link_data_list: List[NaverNewsLinkModel] = []
         self.date = date
         self.date_str = date.strftime("%Y%m%d")
+        # https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&listType=title&date=20200408
         self.url = 'https://news.naver.com/main/list.nhn?mode=LSD&mid=sec&sid1=001&listType=title&date=%s' % self.date_str
         self.driver = driver
         self.on_page_crawled = on_page_crawled
@@ -176,28 +181,36 @@ class NewsLinkPageArticleParser:
     def parse(self) -> List[NaverNewsLinkModel]:
         tree = html.fromstring(self.page_html)
         articles = tree.xpath(
-            "//*[@id='main_content']/div[@class='list_body newsflash_body']//li")
-
+            "//*[@id='main_content']/div//ul//li")
         # articles = self.driver.find_elements_by_xpath(
         #     "//*[@id='main_content']/div[@class='list_body newsflash_body']//a[@class='nclicks(fls.list)']")
 
         for article in articles:
             self.current_article_number_in_page += 1
-            # try:
-            href = article.xpath("./a/@href")[0]
-            # region title
-            lang = 'ko'
-            title = article.xpath("./a/text()")
+            try:
+                # title typed view
+                href = article.xpath("./a/@href")[0]
+                title = article.xpath("./a/text()")
+                provider = article.xpath("./span[@class='writing']/text()")
+            except IndexError:
+                # summary typed view
+                # summary 타입은 사진이 없을경우 dt1 이 dt2 의 역할을함.
+                try:
+                    href = article.xpath("//dt[2]/a/@href")[0]
+                    title = article.xpath("//dt[2]/a/text()")
+                except:
+                    href = article.xpath("//dt[1]/a/@href")[0]
+                    title = article.xpath("//dt[1]/a/text()")
+                provider = article.xpath("//dd/span[2]/text()")
             if len(title) > 0:
                 title = title[0]
             else:
                 title = ""
-            # endregion
+            title = normalize_title(title)
 
             publish_time = self.parse_time(article)
 
             # region provider
-            provider = article.xpath("./span[@class='writing']/text()")
             if len(provider) > 0:
                 provider = provider[0]
             else:
@@ -213,37 +226,39 @@ class NewsLinkPageArticleParser:
         return self.link_data_list
 
     def parse_time(self, article_node) -> datetime:
+        try:
+            # region publish_time
+            publish_time = datetime.now().strftime(TIME_FORMAT)
 
-        # region publish_time
-        publish_time = datetime.now().strftime(TIME_FORMAT)
+            # 일반 시간 // 과거 일경우
+            normal_publish_time_text = article_node.xpath("./span[@class='date']/text()")
 
-        # 일반 시간 // 과거 일경우
-        normal_publish_time_text = article_node.xpath("./span[@class='date']/text()")
+            # 최근 일경우, 하지만 1시간 이상일경우 "1시간전" 으로 표시됨
+            humanized_publish_time_outdated = article_node.xpath(
+                "./span[@class='date is_outdated']/text()")
 
-        # 최근 일경우, 하지만 1시간 이상일경우 "1시간전" 으로 표시됨
-        humanized_publish_time_outdated = article_node.xpath(
-            "./span[@class='date is_outdated']/text()")
+            # 최근 일경우, 1시간 미만 일경우, "12분전" 으로 표시됨
+            humanized_publish_time_new = article_node.xpath("./span[@class='date is_new']/text()")
 
-        # 최근 일경우, 1시간 미만 일경우, "12분전" 으로 표시됨
-        humanized_publish_time_new = article_node.xpath("./span[@class='date is_new']/text()")
+            if len(normal_publish_time_text) > 0:
+                normal_publish_time_text = normal_publish_time_text[0]
+                publish_time = datetime.strptime(normal_publish_time_text, "%Y.%m.%d %H:%M")
 
-        if len(normal_publish_time_text) > 0:
-            normal_publish_time_text = normal_publish_time_text[0]
-            publish_time = datetime.strptime(normal_publish_time_text, "%Y.%m.%d %H:%M")
+            elif len(humanized_publish_time_outdated) > 0:
+                publish_time_text = datetime.now().strftime(TIME_FORMAT) + "/" + \
+                               humanized_publish_time_outdated[0]
+                warnings.warn("this time is not convertible. :: " + publish_time_text)
 
-        elif len(humanized_publish_time_outdated) > 0:
-            publish_time_text = datetime.now().strftime(TIME_FORMAT) + "/" + \
-                           humanized_publish_time_outdated[0]
-            warnings.warn("this time is not convertible. :: " + publish_time_text)
-
-            publish_time = self.page_date
-        elif len(humanized_publish_time_new) > 0:
-            delta_str = humanized_publish_time_new[0]
-            delta = [int(s) for s in re.findall(r'\d+', delta_str)][0]
-            publish_time = datetime.now() - timedelta(minutes=delta)
-            publish_time = publish_time
-        # endregion
-
+                publish_time = self.page_date
+            elif len(humanized_publish_time_new) > 0:
+                delta_str = humanized_publish_time_new[0]
+                delta = [int(s) for s in re.findall(r'\d+', delta_str)][0]
+                publish_time = datetime.now() - timedelta(minutes=delta)
+                publish_time = publish_time
+            # endregion
+        except:
+            # other case, just use now.
+            publish_time = datetime.now()
         return publish_time
 
 
