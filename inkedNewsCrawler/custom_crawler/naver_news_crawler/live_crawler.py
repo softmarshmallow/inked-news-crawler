@@ -6,7 +6,7 @@ from typing import List
 import warnings
 import time
 from selenium.webdriver import Chrome
-
+from tqdm import tqdm
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_content_crawler_threaded import \
     NaverNewsSingleArticleContentCrawler
 from inkedNewsCrawler.custom_crawler.naver_news_crawler.naver_news_crawl_helper import \
@@ -87,7 +87,7 @@ class LiveNewsLinkCrawler(Thread):
         self.should_continue_crawling = not is_reached
 
         link_data_list.reverse()
-        for data in link_data_list:
+        for data in tqdm(link_data_list):
             self.add_to_queue(data)
 
         # none_added_items = list(link_data_list[:index+1])
