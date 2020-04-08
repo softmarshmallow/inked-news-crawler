@@ -54,6 +54,7 @@ class LiveNewsLinkCrawler(Thread):
         self.conflict_check_list: List[NaverNewsLinkModel] = []
 
     def run(self):
+        print("LiveNewsLinkCrawler has started")
         while True:
             if self.refresh_required():
                 self.crawl()
@@ -156,7 +157,7 @@ class LiveNewsContentCrawler(Thread):
         self.threads_count = 4
 
     def run(self):
-
+        print("LiveNewsContentCrawler has started")
         # pool = ThreadPool(self.threads_count)
         # pool.starmap(self.crawl_single_article, zip(latest_news_links_data_list, repeat(self.on_item_crawl)))
         # close the pool and wait for the work to finish
