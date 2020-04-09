@@ -24,10 +24,6 @@ ipython-genutils==0.2.0
 ipywidgets==7.4.0
 Jinja2==2.10
 jsonschema==2.6.0
-jupyter==1.0.0
-jupyter-client==5.2.3
-jupyter-console==5.2.0
-jupyter-core==4.4.0
 lxml==4.2.3
 mistune==0.8.3
 nbconvert==5.3.1
@@ -80,6 +76,5 @@ botocore
 boto3==1.8.1
 parsel==1.5.0
 scrapy_proxies==0.4
-firebase-admin==2.13.0
 langdetect==1.0.7
 # chromedriver-installer==0.0.6

@@ -7,6 +7,7 @@ def get_chrome_options(headless=True, disable_javascript=True, disable_images=Tr
 
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument("window-size=1024,768")
 
     if headless:
         options.add_argument('--headless')

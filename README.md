@@ -12,12 +12,36 @@
 
     virtualenv venv
 
->you can use any name insted of **venv**
-
-
 ### Active your virtual environment:
 
     source venv/bin/activate
+
+### install pip packages
+
+    `pip install -r requirements.txt
+
+
+### install chromedriver
+
+```
+sudo apt-get update
+sudo apt-get install -y unzip xvfb libxi6 libgconf-2-4
+sudo apt-get install libxss1 libappindicator1 libindicator7
+sudo apt-get install default-jdk 
+wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+sudo dpkg -i google-chrome*.deb
+sudo apt-get install -f
+
+
+
+wget -N http://chromedriver.storage.googleapis.com/2.26/chromedriver_linux64.zip
+unzip chromedriver_linux64.zip
+chmod +x chromedriver
+
+sudo mv -f chromedriver /usr/local/share/chromedriver
+sudo ln -s /usr/local/share/chromedriver /usr/local/bin/chromedriver
+sudo ln -s /usr/local/share/chromedriver /usr/bin/chromedriver
+```
 
 ### Using fish shell:
 
