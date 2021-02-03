@@ -61,3 +61,17 @@ sudo apt-get install google-chrome-stable
 ### Add python module to path
    `export PYTHONPATH="${PYTHONPATH}:inkedNewsCrawler"`
  `chmod +x crawler.sh`
+ 
+ 
+ 
+ ## register service
+ 
+ ```shell script
+sudo cp crawler.service /etc/systemd/system/crawler.service
+sudo chmod 664 /etc/systemd/system/crawler.service
+
+sudo systemctl daemon-reload
+sudo systemctl start crawler.service
+sudo systemctl status crawler.service
+sudo systemctl enable crawler.service
+```

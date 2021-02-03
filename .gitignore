@@ -2,3 +2,5 @@
 venv
 config/service-api-credential.json
 *.pyc
+node_modues
+.DS_Store
